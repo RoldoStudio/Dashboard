@@ -140,8 +140,15 @@ async function request(endpoint, options = {}) {
     ...options.headers,
   };
 
-  if (token && !headers['Authorization']) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (isLiveMode()) {
+    const basicAuth = localStorage.getItem('blockmerge_basic_auth');
+    if (basicAuth && !headers['Authorization']) {
+      headers['Authorization'] = `Basic ${basicAuth}`;
+    }
+  } else {
+    if (token && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
   }
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -188,7 +195,11 @@ export const api = {
     localStorage.setItem('blockmerge_basic_auth', basicAuth);
     try {
       // Validate credentials by calling stats endpoint
-      await request('/stats/summary');
+      await request('/stats/summary', {
+        headers: {
+          'Authorization': `Basic ${basicAuth}`
+        }
+      });
       localStorage.setItem(AUTH_TOKEN_KEY, 'live-admin-session-placeholder');
       return {
         user: {
