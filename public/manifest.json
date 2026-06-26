@@ -1,0 +1,17 @@
+{
+  "short_name": "BlockMerge",
+  "name": "BlockMerge Admin Dashboard",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#08090d",
+  "theme_color": "#6366f1",
+  "display": "standalone",
+  "orientation": "any"
+}
