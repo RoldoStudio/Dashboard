@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
-import { api } from './api';
+import { api, isLiveMode, setLiveMode } from './api';
 
 export default function App() {
   const [user, setUser] = useState(null);
   const [toasts, setToasts] = useState([]);
-  const [isLive, setIsLive] = useState(api.isLiveMode ? api.isLiveMode() : false);
+  const [isLive, setIsLive] = useState(isLiveMode());
 
   // Load user from token if present in session/localStorage
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function App() {
   const handleToggleLiveMode = () => {
     const nextMode = !isLive;
     setIsLive(nextMode);
-    api.setLiveMode(nextMode);
+    setLiveMode(nextMode);
     addToast(`Switched API target mode to: ${nextMode ? 'Live Backend API' : 'Local Mock Data'}`, 'success');
   };
 

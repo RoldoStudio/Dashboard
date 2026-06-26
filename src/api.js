@@ -215,7 +215,7 @@ export const api = {
       };
     } catch (err) {
       localStorage.removeItem('blockmerge_basic_auth');
-      throw new Error('Invalid Live credentials. Please check your username and password.');
+      throw new Error(err.message || 'Invalid Live credentials. Please check your username and password.');
     }
   },
 
