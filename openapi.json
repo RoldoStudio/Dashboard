@@ -1,0 +1,1703 @@
+﻿{
+    "openapi":  "3.1.0",
+    "info":  {
+                 "title":  "BlockMerge Backend",
+                 "description":  "Backend API for BlockMerge Unity game",
+                 "version":  "1.0.0"
+             },
+    "paths":  {
+                  "/auth/google":  {
+                                       "post":  {
+                                                    "tags":  [
+                                                                 "Authentication"
+                                                             ],
+                                                    "summary":  "Google Sign In",
+                                                    "description":  "Authenticate user with Google ID token.\n\nAccepts Google ID token and optional device_id. Verifies token,\nlooks up or creates user, and returns JWT access token with user details.\n\nRequest body:\n    {\n        \"id_token\": \"...\",\n        \"device_id\": \"optional-uuid\"\n    }\n\nReturns:\n    TokenResponse with access_token and user details\n\nRaises:\n    401: If Google token is invalid\n    500: If database error occurs",
+                                                    "operationId":  "google_sign_in_auth_google_post",
+                                                    "requestBody":  {
+                                                                        "content":  {
+                                                                                        "application/json":  {
+                                                                                                                 "schema":  {
+                                                                                                                                "$ref":  "#/components/schemas/GoogleAuthRequest"
+                                                                                                                            }
+                                                                                                             }
+                                                                                    },
+                                                                        "required":  true
+                                                                    },
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "Successful Response",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "422":  {
+                                                                                  "description":  "Validation Error",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              }
+                                                                  }
+                                                }
+                                   },
+                  "/auth/apple":  {
+                                      "post":  {
+                                                   "tags":  [
+                                                                "Authentication"
+                                                            ],
+                                                   "summary":  "Apple Sign In",
+                                                   "description":  "Authenticate user with Apple Sign-In using authorization code.\n\nImplements Apple Sign-In flow (AUTH-10):\n1. Exchanges authorization code for ID token via Apple\u0027s endpoint\n2. Validates token claims (expiration, audience, issuer, required fields)\n3. Looks up or creates user by apple_id\n4. Returns JWT access token with user details\n\nRequest body:\n    {\n        \"authorization_code\": \"...\",\n        \"id_token\": \"optional\",\n        \"device_id\": \"optional-uuid\"\n    }\n\nReturns:\n    TokenResponse with access_token and user details\n\nRaises:\n    401: If Apple authorization code is invalid or token validation fails\n    400: If user creation fails due to constraints\n    500: If database error occurs during user creation/update",
+                                                   "operationId":  "apple_sign_in_auth_apple_post",
+                                                   "requestBody":  {
+                                                                       "content":  {
+                                                                                       "application/json":  {
+                                                                                                                "schema":  {
+                                                                                                                               "$ref":  "#/components/schemas/AppleAuthRequest"
+                                                                                                                           }
+                                                                                                            }
+                                                                                   },
+                                                                       "required":  true
+                                                                   },
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "Successful Response",
+                                                                                 "content":  {
+                                                                                                 "application/json":  {
+                                                                                                                          "schema":  {
+                                                                                                                                         "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                     }
+                                                                                                                      }
+                                                                                             }
+                                                                             },
+                                                                     "422":  {
+                                                                                 "description":  "Validation Error",
+                                                                                 "content":  {
+                                                                                                 "application/json":  {
+                                                                                                                          "schema":  {
+                                                                                                                                         "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                     }
+                                                                                                                      }
+                                                                                             }
+                                                                             }
+                                                                 }
+                                               }
+                                  },
+                  "/auth/guest":  {
+                                      "post":  {
+                                                   "tags":  [
+                                                                "Authentication"
+                                                            ],
+                                                   "summary":  "Guest Sign In",
+                                                   "description":  "Create or recover guest account with device binding (AUTH-03, AUTH-04).\n\nEnables device-based guest account persistence across app sessions.\n\nSignup: Omit guest_secret. Returns user_id and a new guest_secret.\nLogin: Provide device_id and guest_secret.",
+                                                   "operationId":  "guest_sign_in_auth_guest_post",
+                                                   "requestBody":  {
+                                                                       "content":  {
+                                                                                       "application/json":  {
+                                                                                                                "schema":  {
+                                                                                                                               "$ref":  "#/components/schemas/GuestAuthRequest"
+                                                                                                                           }
+                                                                                                            }
+                                                                                   },
+                                                                       "required":  true
+                                                                   },
+                                                   "responses":  {
+                                                                     "200":  {
+                                                                                 "description":  "Successful Response",
+                                                                                 "content":  {
+                                                                                                 "application/json":  {
+                                                                                                                          "schema":  {
+                                                                                                                                         "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                     }
+                                                                                                                      }
+                                                                                             }
+                                                                             },
+                                                                     "422":  {
+                                                                                 "description":  "Validation Error",
+                                                                                 "content":  {
+                                                                                                 "application/json":  {
+                                                                                                                          "schema":  {
+                                                                                                                                         "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                     }
+                                                                                                                      }
+                                                                                             }
+                                                                             }
+                                                                 }
+                                               }
+                                  },
+                  "/auth/google/convert":  {
+                                               "post":  {
+                                                            "tags":  [
+                                                                         "Authentication"
+                                                                     ],
+                                                            "summary":  "Google Convert",
+                                                            "description":  "Convert guest account to Google authentication without losing progression (AUTH-05).\n\nImplements guest-to-authenticated account conversion:\n1. Verify Google ID token\n2. Check if guest account exists with this device_id\n3. If guest exists and no existing Google user: Merge accounts\n4. If guest exists but Google user exists elsewhere: Return 409 Conflict\n5. If no guest: Create normal authenticated user\n\nDevice_id is required to identify the guest account being converted.\nProgression data is preserved through account merge.\n\nRequest body:\n    {\n        \"id_token\": \"...\",\n        \"device_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n    }\n\nReturns:\n    TokenResponse with JWT for merged (or new) user and user details\n\nRaises:\n    401: If Google token is invalid\n    409: If trying to merge with different existing Google user (conflict)\n    500: If database error occurs",
+                                                            "operationId":  "google_convert_auth_google_convert_post",
+                                                            "requestBody":  {
+                                                                                "content":  {
+                                                                                                "application/json":  {
+                                                                                                                         "schema":  {
+                                                                                                                                        "$ref":  "#/components/schemas/GoogleAuthRequest"
+                                                                                                                                    }
+                                                                                                                     }
+                                                                                            },
+                                                                                "required":  true
+                                                                            },
+                                                            "responses":  {
+                                                                              "200":  {
+                                                                                          "description":  "Successful Response",
+                                                                                          "content":  {
+                                                                                                          "application/json":  {
+                                                                                                                                   "schema":  {
+                                                                                                                                                  "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                              }
+                                                                                                                               }
+                                                                                                      }
+                                                                                      },
+                                                                              "422":  {
+                                                                                          "description":  "Validation Error",
+                                                                                          "content":  {
+                                                                                                          "application/json":  {
+                                                                                                                                   "schema":  {
+                                                                                                                                                  "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                              }
+                                                                                                                               }
+                                                                                                      }
+                                                                                      }
+                                                                          }
+                                                        }
+                                           },
+                  "/auth/apple/convert":  {
+                                              "post":  {
+                                                           "tags":  [
+                                                                        "Authentication"
+                                                                    ],
+                                                           "summary":  "Apple Convert",
+                                                           "description":  "Convert guest account to Apple authentication without losing progression (AUTH-06).\n\nImplements guest-to-authenticated account conversion with Apple Sign-In:\n1. Verify Apple authorization code and exchange for tokens\n2. Check if guest account exists with this device_id\n3. If guest exists and no existing Apple user: Merge accounts\n4. If guest exists but Apple user exists elsewhere: Return 409 Conflict\n5. If no guest: Create normal authenticated user\n\nDevice_id is required to identify the guest account being converted.\nProgression data is preserved through account merge.\n\nRequest body:\n    {\n        \"authorization_code\": \"...\",\n        \"device_id\": \"550e8400-e29b-41d4-a716-446655440000\"\n    }\n\nReturns:\n    TokenResponse with JWT for merged (or new) user and user details\n\nRaises:\n    401: If Apple token is invalid\n    409: If trying to merge with different existing Apple user (conflict)\n    500: If database error occurs",
+                                                           "operationId":  "apple_convert_auth_apple_convert_post",
+                                                           "requestBody":  {
+                                                                               "content":  {
+                                                                                               "application/json":  {
+                                                                                                                        "schema":  {
+                                                                                                                                       "$ref":  "#/components/schemas/AppleAuthRequest"
+                                                                                                                                   }
+                                                                                                                    }
+                                                                                           },
+                                                                               "required":  true
+                                                                           },
+                                                           "responses":  {
+                                                                             "200":  {
+                                                                                         "description":  "Successful Response",
+                                                                                         "content":  {
+                                                                                                         "application/json":  {
+                                                                                                                                  "schema":  {
+                                                                                                                                                 "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                             }
+                                                                                                                              }
+                                                                                                     }
+                                                                                     },
+                                                                             "422":  {
+                                                                                         "description":  "Validation Error",
+                                                                                         "content":  {
+                                                                                                         "application/json":  {
+                                                                                                                                  "schema":  {
+                                                                                                                                                 "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                             }
+                                                                                                                              }
+                                                                                                     }
+                                                                                     }
+                                                                         }
+                                                       }
+                                          },
+                  "/auth/google/bind":  {
+                                            "post":  {
+                                                         "tags":  [
+                                                                      "Authentication"
+                                                                  ],
+                                                         "summary":  "Bind Google",
+                                                         "description":  "Bind Google authentication to existing authenticated user (AUTH-07).\n\nAllows user with Apple (or Guest) account to add Google login to same account.\nUser must be authenticated (provide valid JWT in Authorization header).\n\nSecurity checks:\n- User must be authenticated\n- Google ID cannot already belong to another user\n- User cannot bind same provider twice\n\nRequest body:\n    {\n        \"id_token\": \"...\"\n    }\n\nReturns:\n    TokenResponse with updated user info and new JWT\n\nRaises:\n    401: If JWT is invalid or user not authenticated\n    409: If Google ID already bound to different user or same user\n    500: If database error occurs",
+                                                         "operationId":  "bind_google_auth_google_bind_post",
+                                                         "requestBody":  {
+                                                                             "content":  {
+                                                                                             "application/json":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/GoogleAuthRequest"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                         },
+                                                                             "required":  true
+                                                                         },
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "Successful Response",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   },
+                                                                           "422":  {
+                                                                                       "description":  "Validation Error",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   }
+                                                                       },
+                                                         "security":  [
+                                                                          {
+                                                                              "HTTPBearer":  [
+
+                                                                                             ]
+                                                                          }
+                                                                      ]
+                                                     }
+                                        },
+                  "/auth/apple/bind":  {
+                                           "post":  {
+                                                        "tags":  [
+                                                                     "Authentication"
+                                                                 ],
+                                                        "summary":  "Bind Apple",
+                                                        "description":  "Bind Apple authentication to existing authenticated user (AUTH-07).\n\nAllows user with Google (or Guest) account to add Apple login to same account.\nUser must be authenticated (provide valid JWT in Authorization header).\n\nSecurity checks:\n- User must be authenticated\n- Apple ID cannot already belong to another user\n- User cannot bind same provider twice\n\nRequest body:\n    {\n        \"authorization_code\": \"...\"\n    }\n\nReturns:\n    TokenResponse with updated user info and new JWT\n\nRaises:\n    401: If JWT is invalid or user not authenticated\n    409: If Apple ID already bound to different user or same user\n    500: If database error occurs",
+                                                        "operationId":  "bind_apple_auth_apple_bind_post",
+                                                        "requestBody":  {
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+                                                                                                                                    "$ref":  "#/components/schemas/AppleAuthRequest"
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        },
+                                                                            "required":  true
+                                                                        },
+                                                        "responses":  {
+                                                                          "200":  {
+                                                                                      "description":  "Successful Response",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  },
+                                                                          "422":  {
+                                                                                      "description":  "Validation Error",
+                                                                                      "content":  {
+                                                                                                      "application/json":  {
+                                                                                                                               "schema":  {
+                                                                                                                                              "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                          }
+                                                                                                                           }
+                                                                                                  }
+                                                                                  }
+                                                                      },
+                                                        "security":  [
+                                                                         {
+                                                                             "HTTPBearer":  [
+
+                                                                                            ]
+                                                                         }
+                                                                     ]
+                                                    }
+                                       },
+                  "/auth/refresh":  {
+                                        "post":  {
+                                                     "tags":  [
+                                                                  "Authentication"
+                                                              ],
+                                                     "summary":  "Refresh Token",
+                                                     "description":  "Refresh access token and rotate refresh token (AUTH-08).\n\nImplements refresh token rotation and reuse detection:\n1. Decode and verify the refresh token JWT\n2. Check if token exists and is valid in the database\n3. If token is revoked (reuse detection): Revoke all tokens for this user\n4. If token is valid: Issue new access token + new refresh token, and delete old one\n5. Update last login for user\n\nRequest body:\n    {\n        \"refresh_token\": \"...\"\n    }\n\nReturns:\n    TokenResponse with new access/refresh tokens\n\nRaises:\n    401: If refresh token is invalid, expired, or revoked",
+                                                     "operationId":  "refresh_token_auth_refresh_post",
+                                                     "requestBody":  {
+                                                                         "content":  {
+                                                                                         "application/json":  {
+                                                                                                                  "schema":  {
+                                                                                                                                 "$ref":  "#/components/schemas/RefreshTokenRequest"
+                                                                                                                             }
+                                                                                                              }
+                                                                                     },
+                                                                         "required":  true
+                                                                     },
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "Successful Response",
+                                                                                   "content":  {
+                                                                                                   "application/json":  {
+                                                                                                                            "schema":  {
+                                                                                                                                           "$ref":  "#/components/schemas/TokenResponse"
+                                                                                                                                       }
+                                                                                                                        }
+                                                                                               }
+                                                                               },
+                                                                       "422":  {
+                                                                                   "description":  "Validation Error",
+                                                                                   "content":  {
+                                                                                                   "application/json":  {
+                                                                                                                            "schema":  {
+                                                                                                                                           "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                       }
+                                                                                                                        }
+                                                                                               }
+                                                                               }
+                                                                   }
+                                                 }
+                                    },
+                  "/auth/logout":  {
+                                       "post":  {
+                                                    "tags":  [
+                                                                 "Authentication"
+                                                             ],
+                                                    "summary":  "Logout",
+                                                    "description":  "Logout endpoint to invalidate user\u0027s refresh tokens (AUTH-09).\n\nRevokes all refresh tokens for the current user in the database.\nAccess tokens are stateless and remain valid until expiration (short-lived).\n\nSecurity:\n- Requires valid access token\n- Logs logout event\n- Deletes database-backed refresh tokens",
+                                                    "operationId":  "logout_auth_logout_post",
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "Successful Response",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              }
+                                                                  },
+                                                    "security":  [
+                                                                     {
+                                                                         "HTTPBearer":  [
+
+                                                                                        ]
+                                                                     }
+                                                                 ]
+                                                }
+                                   },
+                  "/auth/account":  {
+                                        "delete":  {
+                                                       "tags":  [
+                                                                    "Authentication"
+                                                                ],
+                                                       "summary":  "Delete Account",
+                                                       "description":  "Delete and anonymize the user\u0027s account (AUTH-11).\n\nResets PII fields in DBUser, invalidates all active sessions, \nbut preserves progression data for statistics.\nRequires valid access token.",
+                                                       "operationId":  "delete_account_auth_account_delete",
+                                                       "responses":  {
+                                                                         "200":  {
+                                                                                     "description":  "Successful Response",
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 }
+                                                                     },
+                                                       "security":  [
+                                                                        {
+                                                                            "HTTPBearer":  [
+
+                                                                                           ]
+                                                                        }
+                                                                    ]
+                                                   }
+                                    },
+                  "/progression/":  {
+                                        "get":  {
+                                                    "tags":  [
+                                                                 "Progression"
+                                                             ],
+                                                    "summary":  "Get Progression",
+                                                    "description":  "Get user\u0027s complete game progression.",
+                                                    "operationId":  "get_progression_progression__get",
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "Successful Response",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/UserProgression"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              }
+                                                                  },
+                                                    "security":  [
+                                                                     {
+                                                                         "HTTPBearer":  [
+
+                                                                                        ]
+                                                                     }
+                                                                 ]
+                                                }
+                                    },
+                  "/progression/sync":  {
+                                            "post":  {
+                                                         "tags":  [
+                                                                      "Progression"
+                                                                  ],
+                                                         "summary":  "Sync Progression",
+                                                         "description":  "Bulk synchronize progression data.",
+                                                         "operationId":  "sync_progression_progression_sync_post",
+                                                         "requestBody":  {
+                                                                             "content":  {
+                                                                                             "application/json":  {
+                                                                                                                      "schema":  {
+                                                                                                                                     "$ref":  "#/components/schemas/ProgressionSyncRequest"
+                                                                                                                                 }
+                                                                                                                  }
+                                                                                         },
+                                                                             "required":  true
+                                                                         },
+                                                         "responses":  {
+                                                                           "200":  {
+                                                                                       "description":  "Successful Response",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/UserProgression"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   },
+                                                                           "422":  {
+                                                                                       "description":  "Validation Error",
+                                                                                       "content":  {
+                                                                                                       "application/json":  {
+                                                                                                                                "schema":  {
+                                                                                                                                               "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                           }
+                                                                                                                            }
+                                                                                                   }
+                                                                                   }
+                                                                       },
+                                                         "security":  [
+                                                                          {
+                                                                              "HTTPBearer":  [
+
+                                                                                             ]
+                                                                          }
+                                                                      ]
+                                                     }
+                                        },
+                  "/progression/coins/update":  {
+                                                    "post":  {
+                                                                 "tags":  [
+                                                                              "Progression"
+                                                                          ],
+                                                                 "summary":  "Update Coins",
+                                                                 "description":  "Update coin balance.",
+                                                                 "operationId":  "update_coins_progression_coins_update_post",
+                                                                 "security":  [
+                                                                                  {
+                                                                                      "HTTPBearer":  [
+
+                                                                                                     ]
+                                                                                  }
+                                                                              ],
+                                                                 "parameters":  [
+                                                                                    {
+                                                                                        "name":  "amount",
+                                                                                        "in":  "query",
+                                                                                        "required":  true,
+                                                                                        "schema":  {
+                                                                                                       "type":  "integer",
+                                                                                                       "title":  "Amount"
+                                                                                                   }
+                                                                                    }
+                                                                                ],
+                                                                 "responses":  {
+                                                                                   "200":  {
+                                                                                               "description":  "Successful Response",
+                                                                                               "content":  {
+                                                                                                               "application/json":  {
+                                                                                                                                        "schema":  {
+
+                                                                                                                                                   }
+                                                                                                                                    }
+                                                                                                           }
+                                                                                           },
+                                                                                   "422":  {
+                                                                                               "description":  "Validation Error",
+                                                                                               "content":  {
+                                                                                                               "application/json":  {
+                                                                                                                                        "schema":  {
+                                                                                                                                                       "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                                   }
+                                                                                                                                    }
+                                                                                                           }
+                                                                                           }
+                                                                               }
+                                                             }
+                                                },
+                  "/store/catalog":  {
+                                         "get":  {
+                                                     "tags":  [
+                                                                  "Store \u0026 Inventory"
+                                                              ],
+                                                     "summary":  "Get Catalog",
+                                                     "description":  "Fetch all active skins available in the store.",
+                                                     "operationId":  "get_catalog_store_catalog_get",
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "Successful Response",
+                                                                                   "content":  {
+                                                                                                   "application/json":  {
+                                                                                                                            "schema":  {
+                                                                                                                                           "$ref":  "#/components/schemas/CatalogResponse"
+                                                                                                                                       }
+                                                                                                                        }
+                                                                                               }
+                                                                               }
+                                                                   },
+                                                     "security":  [
+                                                                      {
+                                                                          "HTTPBearer":  [
+
+                                                                                         ]
+                                                                      }
+                                                                  ]
+                                                 }
+                                     },
+                  "/store/purchase":  {
+                                          "post":  {
+                                                       "tags":  [
+                                                                    "Store \u0026 Inventory"
+                                                                ],
+                                                       "summary":  "Purchase Skin",
+                                                       "description":  "Purchase a skin using coins or gems.",
+                                                       "operationId":  "purchase_skin_store_purchase_post",
+                                                       "requestBody":  {
+                                                                           "content":  {
+                                                                                           "application/json":  {
+                                                                                                                    "schema":  {
+                                                                                                                                   "$ref":  "#/components/schemas/PurchaseRequest"
+                                                                                                                               }
+                                                                                                                }
+                                                                                       },
+                                                                           "required":  true
+                                                                       },
+                                                       "responses":  {
+                                                                         "200":  {
+                                                                                     "description":  "Successful Response",
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/PurchaseResponse"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 },
+                                                                         "422":  {
+                                                                                     "description":  "Validation Error",
+                                                                                     "content":  {
+                                                                                                     "application/json":  {
+                                                                                                                              "schema":  {
+                                                                                                                                             "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                         }
+                                                                                                                          }
+                                                                                                 }
+                                                                                 }
+                                                                     },
+                                                       "security":  [
+                                                                        {
+                                                                            "HTTPBearer":  [
+
+                                                                                           ]
+                                                                        }
+                                                                    ]
+                                                   }
+                                      },
+                  "/store/equip":  {
+                                       "post":  {
+                                                    "tags":  [
+                                                                 "Store \u0026 Inventory"
+                                                             ],
+                                                    "summary":  "Equip Skin",
+                                                    "description":  "Equip a skin for the user. Validates ownership.",
+                                                    "operationId":  "equip_skin_store_equip_post",
+                                                    "requestBody":  {
+                                                                        "content":  {
+                                                                                        "application/json":  {
+                                                                                                                 "schema":  {
+                                                                                                                                "$ref":  "#/components/schemas/EquipRequest"
+                                                                                                                            }
+                                                                                                             }
+                                                                                    },
+                                                                        "required":  true
+                                                                    },
+                                                    "responses":  {
+                                                                      "200":  {
+                                                                                  "description":  "Successful Response",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/EquipResponse"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              },
+                                                                      "422":  {
+                                                                                  "description":  "Validation Error",
+                                                                                  "content":  {
+                                                                                                  "application/json":  {
+                                                                                                                           "schema":  {
+                                                                                                                                          "$ref":  "#/components/schemas/HTTPValidationError"
+                                                                                                                                      }
+                                                                                                                       }
+                                                                                              }
+                                                                              }
+                                                                  },
+                                                    "security":  [
+                                                                     {
+                                                                         "HTTPBearer":  [
+
+                                                                                        ]
+                                                                     }
+                                                                 ]
+                                                }
+                                   },
+                  "/store/transactions":  {
+                                              "get":  {
+                                                          "tags":  [
+                                                                       "Store \u0026 Inventory"
+                                                                   ],
+                                                          "summary":  "Get Transactions",
+                                                          "description":  "Returns list of transaction logs for current user.",
+                                                          "operationId":  "get_transactions_store_transactions_get",
+                                                          "responses":  {
+                                                                            "200":  {
+                                                                                        "description":  "Successful Response",
+                                                                                        "content":  {
+                                                                                                        "application/json":  {
+                                                                                                                                 "schema":  {
+                                                                                                                                                "$ref":  "#/components/schemas/TransactionsResponse"
+                                                                                                                                            }
+                                                                                                                             }
+                                                                                                    }
+                                                                                    }
+                                                                        },
+                                                          "security":  [
+                                                                           {
+                                                                               "HTTPBearer":  [
+
+                                                                                              ]
+                                                                           }
+                                                                       ]
+                                                      }
+                                          },
+                  "/stats/summary":  {
+                                         "get":  {
+                                                     "tags":  [
+                                                                  "Stats"
+                                                              ],
+                                                     "summary":  "Get Stats Summary",
+                                                     "description":  "Retrieve secured player base statistics summary.",
+                                                     "operationId":  "get_stats_summary_stats_summary_get",
+                                                     "responses":  {
+                                                                       "200":  {
+                                                                                   "description":  "Successful Response",
+                                                                                   "content":  {
+                                                                                                   "application/json":  {
+                                                                                                                            "schema":  {
+                                                                                                                                           "$ref":  "#/components/schemas/StatsSummaryResponse"
+                                                                                                                                       }
+                                                                                                                        }
+                                                                                               }
+                                                                               }
+                                                                   },
+                                                     "security":  [
+                                                                      {
+                                                                          "HTTPBasic":  [
+
+                                                                                        ]
+                                                                      }
+                                                                  ]
+                                                 }
+                                     },
+                  "/":  {
+                            "get":  {
+                                        "summary":  "Root",
+                                        "description":  "Root endpoint.",
+                                        "operationId":  "root__get",
+                                        "responses":  {
+                                                          "200":  {
+                                                                      "description":  "Successful Response",
+                                                                      "content":  {
+                                                                                      "application/json":  {
+                                                                                                               "schema":  {
+
+                                                                                                                          }
+                                                                                                           }
+                                                                                  }
+                                                                  }
+                                                      }
+                                    }
+                        },
+                  "/health":  {
+                                  "get":  {
+                                              "summary":  "Health Check",
+                                              "description":  "Health check endpoint.",
+                                              "operationId":  "health_check_health_get",
+                                              "responses":  {
+                                                                "200":  {
+                                                                            "description":  "Successful Response",
+                                                                            "content":  {
+                                                                                            "application/json":  {
+                                                                                                                     "schema":  {
+
+                                                                                                                                }
+                                                                                                                 }
+                                                                                        }
+                                                                        }
+                                                            }
+                                          }
+                              }
+              },
+    "components":  {
+                       "schemas":  {
+                                       "AppleAuthRequest":  {
+                                                                "properties":  {
+                                                                                   "authorization_code":  {
+                                                                                                              "type":  "string",
+                                                                                                              "title":  "Authorization Code"
+                                                                                                          },
+                                                                                   "id_token":  {
+                                                                                                    "anyOf":  [
+                                                                                                                  {
+                                                                                                                      "type":  "string"
+                                                                                                                  },
+                                                                                                                  {
+                                                                                                                      "type":  "null"
+                                                                                                                  }
+                                                                                                              ],
+                                                                                                    "title":  "Id Token"
+                                                                                                },
+                                                                                   "device_id":  {
+                                                                                                     "anyOf":  [
+                                                                                                                   {
+                                                                                                                       "type":  "string"
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "type":  "null"
+                                                                                                                   }
+                                                                                                               ],
+                                                                                                     "title":  "Device Id"
+                                                                                                 },
+                                                                                   "guest_secret":  {
+                                                                                                        "anyOf":  [
+                                                                                                                      {
+                                                                                                                          "type":  "string"
+                                                                                                                      },
+                                                                                                                      {
+                                                                                                                          "type":  "null"
+                                                                                                                      }
+                                                                                                                  ],
+                                                                                                        "title":  "Guest Secret"
+                                                                                                    }
+                                                                               },
+                                                                "type":  "object",
+                                                                "required":  [
+                                                                                 "authorization_code"
+                                                                             ],
+                                                                "title":  "AppleAuthRequest",
+                                                                "description":  "Apple authentication request."
+                                                            },
+                                       "CatalogResponse":  {
+                                                               "properties":  {
+                                                                                  "skins":  {
+                                                                                                "items":  {
+                                                                                                              "$ref":  "#/components/schemas/SkinSchema"
+                                                                                                          },
+                                                                                                "type":  "array",
+                                                                                                "title":  "Skins"
+                                                                                            }
+                                                                              },
+                                                               "type":  "object",
+                                                               "required":  [
+                                                                                "skins"
+                                                                            ],
+                                                               "title":  "CatalogResponse"
+                                                           },
+                                       "CurrencyType":  {
+                                                            "type":  "string",
+                                                            "enum":  [
+                                                                         "COINS",
+                                                                         "GEMS"
+                                                                     ],
+                                                            "title":  "CurrencyType"
+                                                        },
+                                       "EquipRequest":  {
+                                                            "properties":  {
+                                                                               "skin_id":  {
+                                                                                               "type":  "string",
+                                                                                               "title":  "Skin Id"
+                                                                                           }
+                                                                           },
+                                                            "type":  "object",
+                                                            "required":  [
+                                                                             "skin_id"
+                                                                         ],
+                                                            "title":  "EquipRequest"
+                                                        },
+                                       "EquipResponse":  {
+                                                             "properties":  {
+                                                                                "success":  {
+                                                                                                "type":  "boolean",
+                                                                                                "title":  "Success"
+                                                                                            },
+                                                                                "active_skin_id":  {
+                                                                                                       "type":  "string",
+                                                                                                       "title":  "Active Skin Id"
+                                                                                                   },
+                                                                                "message":  {
+                                                                                                "anyOf":  [
+                                                                                                              {
+                                                                                                                  "type":  "string"
+                                                                                                              },
+                                                                                                              {
+                                                                                                                  "type":  "null"
+                                                                                                              }
+                                                                                                          ],
+                                                                                                "title":  "Message"
+                                                                                            }
+                                                                            },
+                                                             "type":  "object",
+                                                             "required":  [
+                                                                              "success",
+                                                                              "active_skin_id"
+                                                                          ],
+                                                             "title":  "EquipResponse"
+                                                         },
+                                       "GoogleAuthRequest":  {
+                                                                 "properties":  {
+                                                                                    "id_token":  {
+                                                                                                     "type":  "string",
+                                                                                                     "title":  "Id Token"
+                                                                                                 },
+                                                                                    "device_id":  {
+                                                                                                      "anyOf":  [
+                                                                                                                    {
+                                                                                                                        "type":  "string"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "type":  "null"
+                                                                                                                    }
+                                                                                                                ],
+                                                                                                      "title":  "Device Id"
+                                                                                                  },
+                                                                                    "guest_secret":  {
+                                                                                                         "anyOf":  [
+                                                                                                                       {
+                                                                                                                           "type":  "string"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "type":  "null"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                         "title":  "Guest Secret"
+                                                                                                     }
+                                                                                },
+                                                                 "type":  "object",
+                                                                 "required":  [
+                                                                                  "id_token"
+                                                                              ],
+                                                                 "title":  "GoogleAuthRequest",
+                                                                 "description":  "Google authentication request."
+                                                             },
+                                       "GuestAuthRequest":  {
+                                                                "properties":  {
+                                                                                   "device_id":  {
+                                                                                                     "type":  "string",
+                                                                                                     "title":  "Device Id",
+                                                                                                     "description":  "UUID identifying the device. Required for guest account persistence."
+                                                                                                 },
+                                                                                   "guest_secret":  {
+                                                                                                        "anyOf":  [
+                                                                                                                      {
+                                                                                                                          "type":  "string"
+                                                                                                                      },
+                                                                                                                      {
+                                                                                                                          "type":  "null"
+                                                                                                                      }
+                                                                                                                  ],
+                                                                                                        "title":  "Guest Secret",
+                                                                                                        "description":  "Secret key for existing guest accounts. Required for login, omitted for signup."
+                                                                                                    },
+                                                                                   "device_name":  {
+                                                                                                       "anyOf":  [
+                                                                                                                     {
+                                                                                                                         "type":  "string",
+                                                                                                                         "maxLength":  128,
+                                                                                                                         "minLength":  1
+                                                                                                                     },
+                                                                                                                     {
+                                                                                                                         "type":  "null"
+                                                                                                                     }
+                                                                                                                 ],
+                                                                                                       "title":  "Device Name",
+                                                                                                       "description":  "Optional friendly name for the device (e.g., \u0027iPhone 13\u0027, \u0027Android Phone\u0027)"
+                                                                                                   }
+                                                                               },
+                                                                "type":  "object",
+                                                                "required":  [
+                                                                                 "device_id"
+                                                                             ],
+                                                                "title":  "GuestAuthRequest",
+                                                                "description":  "Guest authentication request for device-based guest account creation."
+                                                            },
+                                       "HTTPValidationError":  {
+                                                                   "properties":  {
+                                                                                      "detail":  {
+                                                                                                     "items":  {
+                                                                                                                   "$ref":  "#/components/schemas/ValidationError"
+                                                                                                               },
+                                                                                                     "type":  "array",
+                                                                                                     "title":  "Detail"
+                                                                                                 }
+                                                                                  },
+                                                                   "type":  "object",
+                                                                   "title":  "HTTPValidationError"
+                                                               },
+                                       "PassedLevel":  {
+                                                           "properties":  {
+                                                                              "level_number":  {
+                                                                                                   "type":  "integer",
+                                                                                                   "title":  "Level Number"
+                                                                                               },
+                                                                              "stars":  {
+                                                                                            "type":  "integer",
+                                                                                            "maximum":  3.0,
+                                                                                            "minimum":  0.0,
+                                                                                            "title":  "Stars",
+                                                                                            "description":  "Stars earned (0-3)"
+                                                                                        },
+                                                                              "high_score":  {
+                                                                                                 "type":  "integer",
+                                                                                                 "title":  "High Score",
+                                                                                                 "default":  0
+                                                                                             },
+                                                                              "completed_at":  {
+                                                                                                   "type":  "string",
+                                                                                                   "format":  "date-time",
+                                                                                                   "title":  "Completed At"
+                                                                                               },
+                                                                              "attempts":  {
+                                                                                               "type":  "integer",
+                                                                                               "title":  "Attempts",
+                                                                                               "default":  1
+                                                                                           }
+                                                                          },
+                                                           "type":  "object",
+                                                           "required":  [
+                                                                            "level_number",
+                                                                            "stars"
+                                                                        ],
+                                                           "title":  "PassedLevel",
+                                                           "description":  "Information about a passed level.",
+                                                           "example":  {
+                                                                           "attempts":  2,
+                                                                           "completed_at":  "2024-01-01T00:00:00",
+                                                                           "high_score":  5000,
+                                                                           "level_number":  1,
+                                                                           "stars":  3
+                                                                       }
+                                                       },
+                                       "ProgressionSyncRequest":  {
+                                                                      "properties":  {
+                                                                                         "level_results":  {
+                                                                                                               "anyOf":  [
+                                                                                                                             {
+                                                                                                                                 "items":  {
+                                                                                                                                               "$ref":  "#/components/schemas/PassedLevel"
+                                                                                                                                           },
+                                                                                                                                 "type":  "array"
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "type":  "null"
+                                                                                                                             }
+                                                                                                                         ],
+                                                                                                               "title":  "Level Results",
+                                                                                                               "description":  "New level results to save"
+                                                                                                           },
+                                                                                         "active_skin_id":  {
+                                                                                                                "anyOf":  [
+                                                                                                                              {
+                                                                                                                                  "type":  "string"
+                                                                                                                              },
+                                                                                                                              {
+                                                                                                                                  "type":  "null"
+                                                                                                                              }
+                                                                                                                          ],
+                                                                                                                "title":  "Active Skin Id",
+                                                                                                                "description":  "Change the currently equipped skin"
+                                                                                                            },
+                                                                                         "coins_delta":  {
+                                                                                                             "anyOf":  [
+                                                                                                                           {
+                                                                                                                               "type":  "integer"
+                                                                                                                           },
+                                                                                                                           {
+                                                                                                                               "type":  "null"
+                                                                                                                           }
+                                                                                                                       ],
+                                                                                                             "title":  "Coins Delta",
+                                                                                                             "description":  "Change in coins (can be negative for purchases)"
+                                                                                                         },
+                                                                                         "gems_delta":  {
+                                                                                                            "anyOf":  [
+                                                                                                                          {
+                                                                                                                              "type":  "integer"
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                              "type":  "null"
+                                                                                                                          }
+                                                                                                                      ],
+                                                                                                            "title":  "Gems Delta",
+                                                                                                            "description":  "Change in gems (can be negative for purchases)"
+                                                                                                        },
+                                                                                         "total_games_increment":  {
+                                                                                                                       "anyOf":  [
+                                                                                                                                     {
+                                                                                                                                         "type":  "integer"
+                                                                                                                                     },
+                                                                                                                                     {
+                                                                                                                                         "type":  "null"
+                                                                                                                                     }
+                                                                                                                                 ],
+                                                                                                                       "title":  "Total Games Increment",
+                                                                                                                       "description":  "Increment total games played count"
+                                                                                                                   },
+                                                                                         "total_blocks_increment":  {
+                                                                                                                        "anyOf":  [
+                                                                                                                                      {
+                                                                                                                                          "type":  "integer"
+                                                                                                                                      },
+                                                                                                                                      {
+                                                                                                                                          "type":  "null"
+                                                                                                                                      }
+                                                                                                                                  ],
+                                                                                                                        "title":  "Total Blocks Increment",
+                                                                                                                        "description":  "Increment total blocks merged count"
+                                                                                                                    },
+                                                                                         "total_playtime_increment":  {
+                                                                                                                          "anyOf":  [
+                                                                                                                                        {
+                                                                                                                                            "type":  "number"
+                                                                                                                                        },
+                                                                                                                                        {
+                                                                                                                                            "type":  "null"
+                                                                                                                                        }
+                                                                                                                                    ],
+                                                                                                                          "title":  "Total Playtime Increment",
+                                                                                                                          "description":  "Increment total playtime in seconds"
+                                                                                                                      },
+                                                                                         "tutorial_ids":  {
+                                                                                                              "anyOf":  [
+                                                                                                                            {
+                                                                                                                                "items":  {
+                                                                                                                                              "type":  "string"
+                                                                                                                                          },
+                                                                                                                                "type":  "array"
+                                                                                                                            },
+                                                                                                                            {
+                                                                                                                                "type":  "null"
+                                                                                                                            }
+                                                                                                                        ],
+                                                                                                              "title":  "Tutorial Ids",
+                                                                                                              "description":  "Set the list of completed tutorial IDs"
+                                                                                                          }
+                                                                                     },
+                                                                      "type":  "object",
+                                                                      "title":  "ProgressionSyncRequest",
+                                                                      "description":  "Bulk synchronization request for game progression.",
+                                                                      "example":  {
+                                                                                      "active_skin_id":  "basic_skin",
+                                                                                      "coins_delta":  100,
+                                                                                      "gems_delta":  5,
+                                                                                      "level_results":  [
+                                                                                                            {
+                                                                                                                "high_score":  1000,
+                                                                                                                "level_number":  1,
+                                                                                                                "stars":  3
+                                                                                                            }
+                                                                                                        ],
+                                                                                      "total_blocks_increment":  25,
+                                                                                      "total_games_increment":  1,
+                                                                                      "total_playtime_increment":  120.5
+                                                                                  }
+                                                                  },
+                                       "PurchaseRequest":  {
+                                                               "properties":  {
+                                                                                  "skin_id":  {
+                                                                                                  "type":  "string",
+                                                                                                  "title":  "Skin Id"
+                                                                                              },
+                                                                                  "currency_type":  {
+                                                                                                        "$ref":  "#/components/schemas/CurrencyType"
+                                                                                                    }
+                                                                              },
+                                                               "type":  "object",
+                                                               "required":  [
+                                                                                "skin_id",
+                                                                                "currency_type"
+                                                                            ],
+                                                               "title":  "PurchaseRequest"
+                                                           },
+                                       "PurchaseResponse":  {
+                                                                "properties":  {
+                                                                                   "success":  {
+                                                                                                   "type":  "boolean",
+                                                                                                   "title":  "Success"
+                                                                                               },
+                                                                                   "skin_id":  {
+                                                                                                   "type":  "string",
+                                                                                                   "title":  "Skin Id"
+                                                                                               },
+                                                                                   "message":  {
+                                                                                                   "anyOf":  [
+                                                                                                                 {
+                                                                                                                     "type":  "string"
+                                                                                                                 },
+                                                                                                                 {
+                                                                                                                     "type":  "null"
+                                                                                                                 }
+                                                                                                             ],
+                                                                                                   "title":  "Message"
+                                                                                               }
+                                                                               },
+                                                                "type":  "object",
+                                                                "required":  [
+                                                                                 "success",
+                                                                                 "skin_id"
+                                                                             ],
+                                                                "title":  "PurchaseResponse"
+                                                            },
+                                       "RefreshTokenRequest":  {
+                                                                   "properties":  {
+                                                                                      "refresh_token":  {
+                                                                                                            "type":  "string",
+                                                                                                            "title":  "Refresh Token"
+                                                                                                        }
+                                                                                  },
+                                                                   "type":  "object",
+                                                                   "required":  [
+                                                                                    "refresh_token"
+                                                                                ],
+                                                                   "title":  "RefreshTokenRequest",
+                                                                   "description":  "Request for token refresh."
+                                                               },
+                                       "SkinSchema":  {
+                                                          "properties":  {
+                                                                             "skin_id":  {
+                                                                                             "type":  "string",
+                                                                                             "title":  "Skin Id"
+                                                                                         },
+                                                                             "name":  {
+                                                                                          "type":  "string",
+                                                                                          "title":  "Name"
+                                                                                      },
+                                                                             "description":  {
+                                                                                                 "anyOf":  [
+                                                                                                               {
+                                                                                                                   "type":  "string"
+                                                                                                               },
+                                                                                                               {
+                                                                                                                   "type":  "null"
+                                                                                                               }
+                                                                                                           ],
+                                                                                                 "title":  "Description"
+                                                                                             },
+                                                                             "price_coins":  {
+                                                                                                 "type":  "integer",
+                                                                                                 "title":  "Price Coins",
+                                                                                                 "default":  0
+                                                                                             },
+                                                                             "price_gems":  {
+                                                                                                "type":  "integer",
+                                                                                                "title":  "Price Gems",
+                                                                                                "default":  0
+                                                                                            },
+                                                                             "category":  {
+                                                                                              "anyOf":  [
+                                                                                                            {
+                                                                                                                "type":  "string"
+                                                                                                            },
+                                                                                                            {
+                                                                                                                "type":  "null"
+                                                                                                            }
+                                                                                                        ],
+                                                                                              "title":  "Category"
+                                                                                          },
+                                                                             "asset_path":  {
+                                                                                                "anyOf":  [
+                                                                                                              {
+                                                                                                                  "type":  "string"
+                                                                                                              },
+                                                                                                              {
+                                                                                                                  "type":  "null"
+                                                                                                              }
+                                                                                                          ],
+                                                                                                "title":  "Asset Path"
+                                                                                            },
+                                                                             "is_active":  {
+                                                                                               "type":  "boolean",
+                                                                                               "title":  "Is Active",
+                                                                                               "default":  true
+                                                                                           }
+                                                                         },
+                                                          "type":  "object",
+                                                          "required":  [
+                                                                           "skin_id",
+                                                                           "name"
+                                                                       ],
+                                                          "title":  "SkinSchema"
+                                                      },
+                                       "StatsSummaryResponse":  {
+                                                                    "properties":  {
+                                                                                       "total_players":  {
+                                                                                                             "type":  "integer",
+                                                                                                             "title":  "Total Players"
+                                                                                                         },
+                                                                                       "active_players_24h":  {
+                                                                                                                  "type":  "integer",
+                                                                                                                  "title":  "Active Players 24H"
+                                                                                                              },
+                                                                                       "active_players_7d":  {
+                                                                                                                 "type":  "integer",
+                                                                                                                 "title":  "Active Players 7D"
+                                                                                                             },
+                                                                                       "active_players_30d":  {
+                                                                                                                  "type":  "integer",
+                                                                                                                  "title":  "Active Players 30D"
+                                                                                                              },
+                                                                                       "guest_to_oauth_conversion_rate":  {
+                                                                                                                              "type":  "number",
+                                                                                                                              "title":  "Guest To Oauth Conversion Rate"
+                                                                                                                          },
+                                                                                       "level_distribution":  {
+                                                                                                                  "additionalProperties":  {
+                                                                                                                                               "type":  "integer"
+                                                                                                                                           },
+                                                                                                                  "type":  "object",
+                                                                                                                  "title":  "Level Distribution"
+                                                                                                              }
+                                                                                   },
+                                                                    "type":  "object",
+                                                                    "required":  [
+                                                                                     "total_players",
+                                                                                     "active_players_24h",
+                                                                                     "active_players_7d",
+                                                                                     "active_players_30d",
+                                                                                     "guest_to_oauth_conversion_rate",
+                                                                                     "level_distribution"
+                                                                                 ],
+                                                                    "title":  "StatsSummaryResponse"
+                                                                },
+                                       "TokenResponse":  {
+                                                             "properties":  {
+                                                                                "access_token":  {
+                                                                                                     "type":  "string",
+                                                                                                     "title":  "Access Token"
+                                                                                                 },
+                                                                                "refresh_token":  {
+                                                                                                      "type":  "string",
+                                                                                                      "title":  "Refresh Token"
+                                                                                                  },
+                                                                                "token_type":  {
+                                                                                                   "type":  "string",
+                                                                                                   "title":  "Token Type",
+                                                                                                   "default":  "bearer"
+                                                                                               },
+                                                                                "expires_in":  {
+                                                                                                   "type":  "integer",
+                                                                                                   "title":  "Expires In"
+                                                                                               },
+                                                                                "user":  {
+                                                                                             "$ref":  "#/components/schemas/User"
+                                                                                         },
+                                                                                "guest_secret":  {
+                                                                                                     "anyOf":  [
+                                                                                                                   {
+                                                                                                                       "type":  "string"
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "type":  "null"
+                                                                                                                   }
+                                                                                                               ],
+                                                                                                     "title":  "Guest Secret"
+                                                                                                 }
+                                                                            },
+                                                             "type":  "object",
+                                                             "required":  [
+                                                                              "access_token",
+                                                                              "refresh_token",
+                                                                              "expires_in",
+                                                                              "user"
+                                                                          ],
+                                                             "title":  "TokenResponse",
+                                                             "description":  "JWT token response."
+                                                         },
+                                       "TransactionLogSchema":  {
+                                                                    "properties":  {
+                                                                                       "id":  {
+                                                                                                  "type":  "integer",
+                                                                                                  "title":  "Id"
+                                                                                              },
+                                                                                       "transaction_type":  {
+                                                                                                                "$ref":  "#/components/schemas/TransactionType"
+                                                                                                            },
+                                                                                       "currency_type":  {
+                                                                                                             "$ref":  "#/components/schemas/CurrencyType"
+                                                                                                         },
+                                                                                       "amount":  {
+                                                                                                      "type":  "integer",
+                                                                                                      "title":  "Amount"
+                                                                                                  },
+                                                                                       "balance_after":  {
+                                                                                                             "type":  "integer",
+                                                                                                             "title":  "Balance After"
+                                                                                                         },
+                                                                                       "item_id":  {
+                                                                                                       "anyOf":  [
+                                                                                                                     {
+                                                                                                                         "type":  "string"
+                                                                                                                     },
+                                                                                                                     {
+                                                                                                                         "type":  "null"
+                                                                                                                     }
+                                                                                                                 ],
+                                                                                                       "title":  "Item Id"
+                                                                                                   },
+                                                                                       "timestamp":  {
+                                                                                                         "type":  "string",
+                                                                                                         "format":  "date-time",
+                                                                                                         "title":  "Timestamp"
+                                                                                                     }
+                                                                                   },
+                                                                    "type":  "object",
+                                                                    "required":  [
+                                                                                     "id",
+                                                                                     "transaction_type",
+                                                                                     "currency_type",
+                                                                                     "amount",
+                                                                                     "balance_after",
+                                                                                     "timestamp"
+                                                                                 ],
+                                                                    "title":  "TransactionLogSchema"
+                                                                },
+                                       "TransactionType":  {
+                                                               "type":  "string",
+                                                               "enum":  [
+                                                                            "PURCHASE",
+                                                                            "REWARD",
+                                                                            "ADJUSTMENT"
+                                                                        ],
+                                                               "title":  "TransactionType"
+                                                           },
+                                       "TransactionsResponse":  {
+                                                                    "properties":  {
+                                                                                       "transactions":  {
+                                                                                                            "items":  {
+                                                                                                                          "$ref":  "#/components/schemas/TransactionLogSchema"
+                                                                                                                      },
+                                                                                                            "type":  "array",
+                                                                                                            "title":  "Transactions"
+                                                                                                        }
+                                                                                   },
+                                                                    "type":  "object",
+                                                                    "required":  [
+                                                                                     "transactions"
+                                                                                 ],
+                                                                    "title":  "TransactionsResponse"
+                                                                },
+                                       "User":  {
+                                                    "properties":  {
+                                                                       "email":  {
+                                                                                     "anyOf":  [
+                                                                                                   {
+                                                                                                       "type":  "string",
+                                                                                                       "format":  "email"
+                                                                                                   },
+                                                                                                   {
+                                                                                                       "type":  "null"
+                                                                                                   }
+                                                                                               ],
+                                                                                     "title":  "Email"
+                                                                                 },
+                                                                       "display_name":  {
+                                                                                            "anyOf":  [
+                                                                                                          {
+                                                                                                              "type":  "string"
+                                                                                                          },
+                                                                                                          {
+                                                                                                              "type":  "null"
+                                                                                                          }
+                                                                                                      ],
+                                                                                            "title":  "Display Name"
+                                                                                        },
+                                                                       "auth_provider":  {
+                                                                                             "type":  "string",
+                                                                                             "title":  "Auth Provider"
+                                                                                         },
+                                                                       "device_id":  {
+                                                                                         "anyOf":  [
+                                                                                                       {
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "type":  "null"
+                                                                                                       }
+                                                                                                   ],
+                                                                                         "title":  "Device Id"
+                                                                                     },
+                                                                       "user_id":  {
+                                                                                       "type":  "string",
+                                                                                       "title":  "User Id",
+                                                                                       "description":  "Unique user identifier"
+                                                                                   },
+                                                                       "google_id":  {
+                                                                                         "anyOf":  [
+                                                                                                       {
+                                                                                                           "type":  "string"
+                                                                                                       },
+                                                                                                       {
+                                                                                                           "type":  "null"
+                                                                                                       }
+                                                                                                   ],
+                                                                                         "title":  "Google Id"
+                                                                                     },
+                                                                       "apple_id":  {
+                                                                                        "anyOf":  [
+                                                                                                      {
+                                                                                                          "type":  "string"
+                                                                                                      },
+                                                                                                      {
+                                                                                                          "type":  "null"
+                                                                                                      }
+                                                                                                  ],
+                                                                                        "title":  "Apple Id"
+                                                                                    },
+                                                                       "created_at":  {
+                                                                                          "type":  "string",
+                                                                                          "format":  "date-time",
+                                                                                          "title":  "Created At"
+                                                                                      },
+                                                                       "last_login":  {
+                                                                                          "type":  "string",
+                                                                                          "format":  "date-time",
+                                                                                          "title":  "Last Login"
+                                                                                      },
+                                                                       "is_active":  {
+                                                                                         "type":  "boolean",
+                                                                                         "title":  "Is Active",
+                                                                                         "default":  true
+                                                                                     },
+                                                                       "auth_methods":  {
+                                                                                            "items":  {
+                                                                                                          "type":  "string"
+                                                                                                      },
+                                                                                            "type":  "array",
+                                                                                            "title":  "Auth Methods",
+                                                                                            "description":  "Parse comma-separated auth_provider into list of methods.",
+                                                                                            "readOnly":  true
+                                                                                        }
+                                                                   },
+                                                    "type":  "object",
+                                                    "required":  [
+                                                                     "auth_provider",
+                                                                     "user_id",
+                                                                     "auth_methods"
+                                                                 ],
+                                                    "title":  "User",
+                                                    "example":  {
+                                                                    "auth_methods":  [
+                                                                                         "google"
+                                                                                     ],
+                                                                    "auth_provider":  "google",
+                                                                    "device_id":  "device_uuid_123",
+                                                                    "display_name":  "Player One",
+                                                                    "email":  "player@example.com",
+                                                                    "google_id":  "google_123456",
+                                                                    "user_id":  "user_123456"
+                                                                }
+                                                },
+                                       "UserProgression":  {
+                                                               "properties":  {
+                                                                                  "user_id":  {
+                                                                                                  "type":  "string",
+                                                                                                  "title":  "User Id"
+                                                                                              },
+                                                                                  "coins":  {
+                                                                                                "type":  "integer",
+                                                                                                "minimum":  0.0,
+                                                                                                "title":  "Coins",
+                                                                                                "description":  "Total coins earned",
+                                                                                                "default":  0
+                                                                                            },
+                                                                                  "gems":  {
+                                                                                               "type":  "integer",
+                                                                                               "minimum":  0.0,
+                                                                                               "title":  "Gems",
+                                                                                               "description":  "Total gems earned",
+                                                                                               "default":  0
+                                                                                           },
+                                                                                  "active_skin_id":  {
+                                                                                                         "anyOf":  [
+                                                                                                                       {
+                                                                                                                           "type":  "string"
+                                                                                                                       },
+                                                                                                                       {
+                                                                                                                           "type":  "null"
+                                                                                                                       }
+                                                                                                                   ],
+                                                                                                         "title":  "Active Skin Id",
+                                                                                                         "description":  "The ID of the currently equipped skin"
+                                                                                                     },
+                                                                                  "owned_skin_ids":  {
+                                                                                                         "items":  {
+                                                                                                                       "type":  "string"
+                                                                                                                   },
+                                                                                                         "type":  "array",
+                                                                                                         "title":  "Owned Skin Ids",
+                                                                                                         "description":  "List of IDs of skins owned by the user"
+                                                                                                     },
+                                                                                  "passed_levels":  {
+                                                                                                        "items":  {
+                                                                                                                      "$ref":  "#/components/schemas/PassedLevel"
+                                                                                                                  },
+                                                                                                        "type":  "array",
+                                                                                                        "title":  "Passed Levels",
+                                                                                                        "description":  "List of completed levels"
+                                                                                                    },
+                                                                                  "next_level":  {
+                                                                                                     "type":  "integer",
+                                                                                                     "minimum":  1.0,
+                                                                                                     "title":  "Next Level",
+                                                                                                     "description":  "Next level to play (length of passed_levels + 1)",
+                                                                                                     "default":  1
+                                                                                                 },
+                                                                                  "total_games_played":  {
+                                                                                                             "type":  "integer",
+                                                                                                             "title":  "Total Games Played",
+                                                                                                             "default":  0
+                                                                                                         },
+                                                                                  "total_blocks_merged":  {
+                                                                                                              "type":  "integer",
+                                                                                                              "title":  "Total Blocks Merged",
+                                                                                                              "default":  0
+                                                                                                          },
+                                                                                  "total_playtime":  {
+                                                                                                         "type":  "number",
+                                                                                                         "title":  "Total Playtime",
+                                                                                                         "default":  0.0
+                                                                                                     },
+                                                                                  "tutorial_ids":  {
+                                                                                                       "anyOf":  [
+                                                                                                                     {
+                                                                                                                         "items":  {
+                                                                                                                                       "type":  "string"
+                                                                                                                                   },
+                                                                                                                         "type":  "array"
+                                                                                                                     },
+                                                                                                                     {
+                                                                                                                         "type":  "null"
+                                                                                                                     }
+                                                                                                                 ],
+                                                                                                       "title":  "Tutorial Ids",
+                                                                                                       "description":  "List of completed tutorial IDs"
+                                                                                                   },
+                                                                                  "updated_at":  {
+                                                                                                     "type":  "string",
+                                                                                                     "format":  "date-time",
+                                                                                                     "title":  "Updated At"
+                                                                                                 }
+                                                                              },
+                                                               "type":  "object",
+                                                               "required":  [
+                                                                                "user_id"
+                                                                            ],
+                                                               "title":  "UserProgression",
+                                                               "description":  "User game progression for BlockMerge.",
+                                                               "example":  {
+                                                                               "coins":  1500,
+                                                                               "passed_levels":  [
+                                                                                                     {
+                                                                                                         "attempts":  2,
+                                                                                                         "completed_at":  "2024-01-01T00:00:00",
+                                                                                                         "high_score":  5000,
+                                                                                                         "level_number":  1,
+                                                                                                         "stars":  3
+                                                                                                     }
+                                                                                                 ],
+                                                                               "total_blocks_merged":  500,
+                                                                               "total_games_played":  10,
+                                                                               "total_playtime":  1800.0,
+                                                                               "user_id":  "user_123456"
+                                                                           }
+                                                           },
+                                       "ValidationError":  {
+                                                               "properties":  {
+                                                                                  "loc":  {
+                                                                                              "items":  {
+                                                                                                            "anyOf":  [
+                                                                                                                          {
+                                                                                                                              "type":  "string"
+                                                                                                                          },
+                                                                                                                          {
+                                                                                                                              "type":  "integer"
+                                                                                                                          }
+                                                                                                                      ]
+                                                                                                        },
+                                                                                              "type":  "array",
+                                                                                              "title":  "Location"
+                                                                                          },
+                                                                                  "msg":  {
+                                                                                              "type":  "string",
+                                                                                              "title":  "Message"
+                                                                                          },
+                                                                                  "type":  {
+                                                                                               "type":  "string",
+                                                                                               "title":  "Error Type"
+                                                                                           },
+                                                                                  "input":  {
+                                                                                                "title":  "Input"
+                                                                                            },
+                                                                                  "ctx":  {
+                                                                                              "type":  "object",
+                                                                                              "title":  "Context"
+                                                                                          }
+                                                                              },
+                                                               "type":  "object",
+                                                               "required":  [
+                                                                                "loc",
+                                                                                "msg",
+                                                                                "type"
+                                                                            ],
+                                                               "title":  "ValidationError"
+                                                           }
+                                   },
+                       "securitySchemes":  {
+                                               "HTTPBearer":  {
+                                                                  "type":  "http",
+                                                                  "scheme":  "bearer"
+                                                              },
+                                               "HTTPBasic":  {
+                                                                 "type":  "http",
+                                                                 "scheme":  "basic"
+                                                             }
+                                           }
+                   }
+}

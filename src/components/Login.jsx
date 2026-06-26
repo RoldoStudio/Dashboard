@@ -12,16 +12,14 @@ export default function Login({ onLoginSuccess, addToast }) {
     const nextMode = !isLive;
     setIsLive(nextMode);
     setLiveMode(nextMode);
-    
+
     // Autofill credentials helper
     if (nextMode) {
       setUsername('');
       setPassword('');
-      addToast('Switched to Live API Mode (Credentials: ton/ton12345)', 'success');
     } else {
       setUsername('admin');
       setPassword('admin');
-      addToast('Switched to Local Mock Mode (Credentials: admin/admin)', 'success');
     }
   };
 
@@ -61,7 +59,7 @@ export default function Login({ onLoginSuccess, addToast }) {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group" style={{ marginBottom: '24px' }}>
-            <div 
+            <div
               className={`api-mode-badge ${isLive ? 'live' : 'mock'}`}
               onClick={handleToggleMode}
               style={{ display: 'inline-flex', alignSelf: 'flex-start', margin: '0 auto 8px auto' }}
