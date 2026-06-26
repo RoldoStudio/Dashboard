@@ -29,8 +29,45 @@ const INITIAL_MOCK_DB = {
       "Level 2": 620,
       "Level 3": 410,
       "Level 4": 220,
-      "Level 5": 100
-    }
+      "Level 5": 100,
+      "Level 50": 85,
+      "Level 100": 70,
+      "Level 500": 45,
+      "Level 1000": 30,
+      "Level 5000": 15,
+      "Level 12000": 3
+    },
+    retention_rate: {
+      "d1": 42.5,
+      "d7": 18.2,
+      "d30": 6.8
+    },
+    active_players_hourly: [
+      { "hour": 0, "active_players": 120 },
+      { "hour": 1, "active_players": 90 },
+      { "hour": 2, "active_players": 70 },
+      { "hour": 3, "active_players": 55 },
+      { "hour": 4, "active_players": 40 },
+      { "hour": 5, "active_players": 45 },
+      { "hour": 6, "active_players": 65 },
+      { "hour": 7, "active_players": 110 },
+      { "hour": 8, "active_players": 180 },
+      { "hour": 9, "active_players": 220 },
+      { "hour": 10, "active_players": 250 },
+      { "hour": 11, "active_players": 280 },
+      { "hour": 12, "active_players": 310 },
+      { "hour": 13, "active_players": 290 },
+      { "hour": 14, "active_players": 270 },
+      { "hour": 15, "active_players": 285 },
+      { "hour": 16, "active_players": 320 },
+      { "hour": 17, "active_players": 360 },
+      { "hour": 18, "active_players": 410 },
+      { "hour": 19, "active_players": 440 },
+      { "hour": 20, "active_players": 450 },
+      { "hour": 21, "active_players": 390 },
+      { "hour": 22, "active_players": 310 },
+      { "hour": 23, "active_players": 200 }
+    ]
   },
   users: [
     {
@@ -119,8 +156,20 @@ const INITIAL_MOCK_DB = {
   ]
 };
 
-// Initialize DB if not present
-if (!localStorage.getItem(MOCK_STORAGE_KEY)) {
+// Initialize DB if not present or outdated
+const existingDbStr = localStorage.getItem(MOCK_STORAGE_KEY);
+let dbNeedsReset = !existingDbStr;
+if (existingDbStr) {
+  try {
+    const existing = JSON.parse(existingDbStr);
+    if (!existing.stats || !existing.stats.retention_rate || !existing.stats.active_players_hourly || !existing.stats.level_distribution["Level 12000"]) {
+      dbNeedsReset = true;
+    }
+  } catch (e) {
+    dbNeedsReset = true;
+  }
+}
+if (dbNeedsReset) {
   localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(INITIAL_MOCK_DB));
 }
 

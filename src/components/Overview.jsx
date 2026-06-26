@@ -5,6 +5,9 @@ import { api } from '../api';
 export default function Overview({ addToast, isLive }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [levelViewMode, setLevelViewMode] = useState('aggregated'); // 'aggregated', 'range', 'hotspots'
+  const [rangeStart, setRangeStart] = useState(1);
+  const [rangeEnd, setRangeEnd] = useState(20);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -22,6 +25,19 @@ export default function Overview({ addToast, isLive }) {
     fetchStats();
   }, [isLive]);
 
+  // Adjust rangeEnd default when stats load
+  useEffect(() => {
+    if (stats) {
+      const rawLevelPairs = Object.entries(stats.level_distribution || {})
+        .map(([lvl, val]) => {
+          const num = parseInt(lvl.replace(/[^\d]/g, '')) || 0;
+          return { level: num };
+        });
+      const maxL = rawLevelPairs.length > 0 ? Math.max(...rawLevelPairs.map(p => p.level), 1) : 1;
+      setRangeEnd(Math.min(maxL, 20));
+    }
+  }, [stats]);
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
@@ -32,79 +48,15 @@ export default function Overview({ addToast, isLive }) {
 
   if (!stats) return null;
 
-  // Level Distribution Data calculation helper
-  const levels = Object.keys(stats.level_distribution || {});
-  const levelValues = Object.values(stats.level_distribution || {});
-  const maxLevelVal = Math.max(...levelValues, 1);
-
-  return (
-    <div>
-      {/* Top Stats Cards Grid */}
-      <div className="stats-grid">
-        <div className="stats-card">
-          <div className="stats-header">
-            <span className="stats-label">Total Player Base</span>
-            <div className="stats-icon-wrapper">
-              <Users size={20} />
-            </div>
-          </div>
-          <span className="stats-value">{stats.total_players.toLocaleString()}</span>
-          <span className="stats-change positive">
-            <span>+12.4%</span> since last month
-          </span>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-header">
-            <span className="stats-label">Daily Active Users (24h)</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--success)' }}>
-              <Flame size={20} />
-            </div>
-          </div>
-          <span className="stats-value">{stats.active_players_24h.toLocaleString()}</span>
-          <span className="stats-change positive">
-            <span>+5.8%</span> compared to yesterday
-          </span>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-header">
-            <span className="stats-label">Monthly Active (30d)</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--accent)' }}>
-              <UserCheck size={20} />
-            </div>
-          </div>
-          <span className="stats-value">{stats.active_players_30d.toLocaleString()}</span>
-          <span className="stats-change positive">
-            <span>+8.2%</span> user growth
-          </span>
-        </div>
-
-        <div className="stats-card">
-          <div className="stats-header">
-            <span className="stats-label">OAuth Conv. Rate</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--warning)' }}>
-              <RefreshCw size={20} />
-            </div>
-          </div>
-          <span className="stats-value">{stats.guest_to_oauth_conversion_rate}%</span>
-          <span className="stats-change positive">
-            <span>+3.1%</span> binding optimization
-          </span>
-        </div>
-      </div>
-
   // Level distribution parsing
   const rawLevelPairs = Object.entries(stats.level_distribution || {})
-    .map(([lvl, val]) => ({ level: parseInt(lvl) || 0, count: parseInt(val) || 0 }))
+    .map(([lvl, val]) => {
+      const num = parseInt(lvl.replace(/[^\d]/g, '')) || 0;
+      return { level: num, count: parseInt(val) || 0 };
+    })
     .sort((a, b) => a.level - b.level);
 
   const maxLevelNum = rawLevelPairs.length > 0 ? Math.max(...rawLevelPairs.map(p => p.level), 1) : 1;
-
-  // Level Chart states
-  const [levelViewMode, setLevelViewMode] = useState('aggregated'); // 'aggregated', 'range', 'hotspots'
-  const [rangeStart, setRangeStart] = useState(1);
-  const [rangeEnd, setRangeEnd] = useState(Math.min(maxLevelNum, 20));
 
   // Determine dynamic bin size for aggregated view
   let binSize = 1;
@@ -176,6 +128,31 @@ export default function Overview({ addToast, isLive }) {
   const stickinessRatio = stats.active_players_30d > 0 
     ? ((stats.active_players_24h / stats.active_players_30d) * 100).toFixed(1) 
     : 0;
+
+  // Retention Curve Calculations (D0 -> D1 -> D7 -> D30)
+  const retention = stats.retention_rate || { d1: 42.5, d7: 18.2, d30: 6.8 };
+  const rWidth = 460;
+  const rHeight = 150;
+  const yD0 = 25;
+  const yD1 = rHeight - (retention.d1 / 100) * (rHeight - 50) - 25;
+  const yD7 = rHeight - (retention.d7 / 100) * (rHeight - 50) - 25;
+  const yD30 = rHeight - (retention.d30 / 100) * (rHeight - 50) - 25;
+  const rPoints = `25,${yD0} 150,${yD1} 275,${yD7} 400,${yD30}`;
+  const rAreaPoints = `25,${rHeight - 25} 25,${yD0} 150,${yD1} 275,${yD7} 400,${yD30} 400,${rHeight - 25}`;
+
+  // 24h Hourly Trend Calculations
+  const hourlyData = stats.active_players_hourly || [];
+  const maxActive = Math.max(...hourlyData.map(d => d.active_players), 1);
+  const hWidth = 460;
+  const hHeight = 150;
+  const hPoints = hourlyData.map((d, index) => {
+    const x = (index / 23) * (hWidth - 50) + 25;
+    const y = hHeight - (d.active_players / maxActive) * (hHeight - 50) - 25;
+    return `${x},${y}`;
+  }).join(' ');
+  const hAreaPoints = hourlyData.length > 0
+    ? `25,${hHeight - 25} ` + hPoints + ` 435,${hHeight - 25}`
+    : '';
 
   return (
     <div>
@@ -413,6 +390,114 @@ export default function Overview({ addToast, isLive }) {
           </div>
           
         </div>
+      </div>
+
+      {/* Advanced Visual Analytics Row */}
+      <div className="charts-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '24px', marginTop: '24px', marginBottom: '32px' }}>
+        
+        {/* Retention cohorts curve */}
+        <div className="chart-card">
+          <div className="chart-header" style={{ marginBottom: '16px' }}>
+            <div>
+              <span className="chart-title">Player Retention Cohorts</span>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Percentage of players returning after Day N</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '180px' }}>
+            <svg width="100%" height="150" viewBox={`0 0 ${rWidth} ${rHeight}`} style={{ overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="retention-area-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              {/* Grid Lines */}
+              <line x1="25" y1="25" x2="400" y2="25" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="65" x2="400" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="105" x2="400" y2="105" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="125" x2="400" y2="125" stroke="rgba(255,255,255,0.08)" />
+
+              {/* Area path */}
+              <polygon points={rAreaPoints} fill="url(#retention-area-grad)" />
+
+              {/* Line path */}
+              <polyline points={rPoints} fill="none" stroke="var(--accent)" strokeWidth="3" />
+
+              {/* Dots & Labels */}
+              <circle cx="25" cy={yD0} r="5" fill="var(--text-primary)" stroke="var(--accent)" strokeWidth="2" />
+              <text x="25" y={yD0 - 10} fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="bold">100%</text>
+              <text x="25" y={rHeight - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="middle">Install</text>
+
+              <circle cx="150" cy={yD1} r="5" fill="var(--text-primary)" stroke="var(--accent)" strokeWidth="2" />
+              <text x="150" y={yD1 - 10} fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="bold">{retention.d1}%</text>
+              <text x="150" y={rHeight - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="middle">Day 1</text>
+
+              <circle cx="275" cy={yD7} r="5" fill="var(--text-primary)" stroke="var(--accent)" strokeWidth="2" />
+              <text x="275" y={yD7 - 10} fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="bold">{retention.d7}%</text>
+              <text x="275" y={rHeight - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="middle">Day 7</text>
+
+              <circle cx="400" cy={yD30} r="5" fill="var(--text-primary)" stroke="var(--accent)" strokeWidth="2" />
+              <text x="400" y={yD30 - 10} fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="bold">{retention.d30}%</text>
+              <text x="400" y={rHeight - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="middle">Day 30</text>
+            </svg>
+          </div>
+        </div>
+
+        {/* 24h Hourly Active Player Trend */}
+        <div className="chart-card">
+          <div className="chart-header" style={{ marginBottom: '16px' }}>
+            <div>
+              <span className="chart-title">Active Players Hourly (24h Trend)</span>
+              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Hourly active concurrency and peak load times</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '180px' }}>
+            <svg width="100%" height="150" viewBox={`0 0 ${hWidth} ${hHeight}`} style={{ overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="hourly-area-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              {/* Grid Lines */}
+              <line x1="25" y1="25" x2="435" y2="25" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="65" x2="435" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="105" x2="435" y2="105" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
+              <line x1="25" y1="125" x2="435" y2="125" stroke="rgba(255,255,255,0.08)" />
+
+              {/* Area path */}
+              <polygon points={hAreaPoints} fill="url(#hourly-area-grad)" />
+
+              {/* Line path */}
+              <polyline points={hPoints} fill="none" stroke="var(--primary)" strokeWidth="2.5" />
+
+              {/* Time stamps & peak markings */}
+              <text x="25" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">00:00</text>
+              <text x="127" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">06:00</text>
+              <text x="230" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">12:00</text>
+              <text x="332" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">18:00</text>
+              <text x="435" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">23:00</text>
+
+              {/* Max peak value indicator */}
+              {hourlyData.length > 0 && (
+                <>
+                  <circle cx={(hourlyData.findIndex(d => d.active_players === maxActive) / 23) * (hWidth - 50) + 25} cy={hHeight - (maxActive / maxActive) * (hHeight - 50) - 25} r="4" fill="var(--success)" />
+                  <text 
+                    x={(hourlyData.findIndex(d => d.active_players === maxActive) / 23) * (hWidth - 50) + 25} 
+                    y={hHeight - (maxActive / maxActive) * (hHeight - 50) - 35} 
+                    fill="var(--success)" 
+                    fontSize="9" 
+                    fontWeight="bold"
+                    textAnchor="middle"
+                  >
+                    Peak: {maxActive}
+                  </text>
+                </>
+              )}
+            </svg>
+          </div>
+        </div>
+
       </div>
 
       {/* Mini Info Panel */}
