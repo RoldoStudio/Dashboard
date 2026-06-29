@@ -161,7 +161,7 @@ export default function Overview({ addToast, isLive }) {
         <div className="stats-card">
           <div className="stats-header">
             <span className="stats-label">Total Player Base</span>
-            <div className="stats-icon-wrapper">
+            <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(255, 255, 255, 0.06)', color: '#a78bfa' }}>
               <Users size={20} />
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function Overview({ addToast, isLive }) {
         <div className="stats-card">
           <div className="stats-header">
             <span className="stats-label">Daily Active Users (24h)</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--success)' }}>
+            <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
               <Flame size={20} />
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function Overview({ addToast, isLive }) {
         <div className="stats-card">
           <div className="stats-header">
             <span className="stats-label">Monthly Active (30d)</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--accent)' }}>
+            <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent)' }}>
               <UserCheck size={20} />
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function Overview({ addToast, isLive }) {
         <div className="stats-card">
           <div className="stats-header">
             <span className="stats-label">OAuth Conv. Rate</span>
-            <div className="stats-icon-wrapper" style={{ color: 'var(--warning)' }}>
+            <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
               <RefreshCw size={20} />
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function Overview({ addToast, isLive }) {
       {/* Visual Analytics Charts */}
       <div className="charts-grid" style={{ gridTemplateColumns: '7fr 5fr' }}>
         
-        {/* REDESIGNED Level progression bar chart */}
+        {/* Level distribution bar chart */}
         <div className="chart-card">
           <div className="chart-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
@@ -229,11 +229,11 @@ export default function Overview({ addToast, isLive }) {
                   value={levelViewMode} 
                   onChange={(e) => setLevelViewMode(e.target.value)}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
+                    background: '#232535',
+                    border: 'none',
+                    color: '#94a3b8',
                     borderRadius: '6px',
-                    padding: '4px 8px',
+                    padding: '6px 12px',
                     fontSize: '12px',
                     outline: 'none',
                     cursor: 'pointer'
@@ -270,7 +270,7 @@ export default function Overview({ addToast, isLive }) {
             )}
           </div>
 
-          <div className="chart-container" style={{ gap: '4px', overflowX: 'auto', paddingBottom: '8px' }}>
+          <div className="chart-container" style={{ gap: '12px', overflowX: 'auto', paddingBottom: '8px', height: '200px', alignItems: 'flex-end', justifyContent: 'space-around' }}>
             {processedChartData.length === 0 ? (
               <div style={{ display: 'flex', width: '100%', justifyContent: 'center', alignItems: 'center', height: '180px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                 No active progression data found for this selection.
@@ -280,14 +280,14 @@ export default function Overview({ addToast, isLive }) {
                 const heightPct = (dataPoint.value / maxChartVal) * 100;
                 return (
                   <div key={dataPoint.label} className="bar-chart-bar" style={{ minWidth: '36px' }}>
-                    <span className="bar-value" style={{ fontSize: '9px' }}>{dataPoint.value}</span>
-                    <div className="bar-fill-wrapper" style={{ height: '150px', width: '100%', maxWidth: '24px' }}>
+                    <span className="bar-value" style={{ fontSize: '11px', marginBottom: '4px', fontWeight: '500' }}>{dataPoint.value}</span>
+                    <div className="bar-fill-wrapper" style={{ height: '120px', width: '100%', maxWidth: '24px' }}>
                       <div 
                         className="bar-fill" 
                         style={{ height: `${heightPct}%` }}
                       />
                     </div>
-                    <span className="bar-label" style={{ fontSize: '9px', textAlign: 'center', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', width: '100%' }} title={dataPoint.label}>
+                    <span className="bar-label" style={{ fontSize: '11px', marginTop: '6px', textAlign: 'center', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', width: '100%' }} title={dataPoint.label}>
                       {dataPoint.label}
                     </span>
                   </div>
@@ -316,24 +316,18 @@ export default function Overview({ addToast, isLive }) {
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="rgba(255, 255, 255, 0.03)"
+                    stroke="#222533"
                     strokeWidth="3"
                   />
                   {/* Gauge fill */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
-                    stroke="url(#gradient-success)"
+                    stroke="#10b981"
                     strokeWidth="3.5"
                     strokeDasharray={`${stickinessRatio}, 100`}
                     style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
                   />
-                  <defs>
-                    <linearGradient id="gradient-success" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#3b82f6" />
-                    </linearGradient>
-                  </defs>
                 </svg>
                 <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <span style={{ fontSize: '18px', fontWeight: '700', fontFamily: 'var(--font-heading)' }}>{stickinessRatio}%</span>
@@ -341,8 +335,8 @@ export default function Overview({ addToast, isLive }) {
               </div>
               
               <div style={{ flexGrow: 1 }}>
-                <div style={{ fontSize: '13px', fontWeight: '600', color: stickinessRatio >= 20 ? 'var(--success)' : stickinessRatio >= 10 ? 'var(--warning)' : 'var(--danger)' }}>
-                  {stickinessRatio >= 20 ? 'Excellent Engagement' : stickinessRatio >= 10 ? 'Good Stability' : 'Low Stickiness'}
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#f43f5e' }}>
+                  Low Stickiness
                 </div>
                 <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>
                   A DAU/MAU ratio of 20%+ is top-tier in hypercasual gaming, showing recurring daily play.
@@ -363,23 +357,17 @@ export default function Overview({ addToast, isLive }) {
                   className="donut-ring"
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
-                  stroke="rgba(255, 255, 255, 0.03)"
+                  stroke="#222533"
                   strokeWidth="3.5"
                 />
                 <path
                   className="donut-segment"
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                   fill="none"
-                  stroke="url(#gradient-accent)"
+                  stroke="#5c3ce6"
                   strokeWidth="3.5"
                   strokeDasharray={`${stats.guest_to_oauth_conversion_rate}, 100`}
                 />
-                <defs>
-                  <linearGradient id="gradient-accent" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="var(--primary)" />
-                    <stop offset="100%" stopColor="var(--accent)" />
-                  </linearGradient>
-                </defs>
               </svg>
 
               <div className="donut-label-overlay">
@@ -453,47 +441,36 @@ export default function Overview({ addToast, isLive }) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '180px' }}>
             <svg width="100%" height="150" viewBox={`0 0 ${hWidth} ${hHeight}`} style={{ overflow: 'visible' }}>
-              <defs>
-                <linearGradient id="hourly-area-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
               {/* Grid Lines */}
               <line x1="25" y1="25" x2="435" y2="25" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="65" x2="435" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="105" x2="435" y2="105" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="125" x2="435" y2="125" stroke="rgba(255,255,255,0.08)" />
 
-              {/* Area path */}
-              <polygon points={hAreaPoints} fill="url(#hourly-area-grad)" />
+              {/* 24 vertical bars representing each hour */}
+              {hourlyData.map((d, index) => {
+                const x = (index / 23) * (hWidth - 50) + 25 - 4; // Center the 8px wide bar
+                const barHeight = (d.active_players / maxActive) * (hHeight - 50);
+                const y = hHeight - barHeight - 25;
+                return (
+                  <rect
+                    key={index}
+                    x={x}
+                    y={y}
+                    width="8"
+                    height={barHeight}
+                    fill="var(--primary)"
+                    rx="2"
+                  />
+                );
+              })}
 
-              {/* Line path */}
-              <polyline points={hPoints} fill="none" stroke="var(--primary)" strokeWidth="2.5" />
-
-              {/* Time stamps & peak markings */}
+              {/* Time stamps */}
               <text x="25" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">00:00</text>
               <text x="127" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">06:00</text>
               <text x="230" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">12:00</text>
               <text x="332" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">18:00</text>
               <text x="435" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">23:00</text>
-
-              {/* Max peak value indicator */}
-              {hourlyData.length > 0 && (
-                <>
-                  <circle cx={(hourlyData.findIndex(d => d.active_players === maxActive) / 23) * (hWidth - 50) + 25} cy={hHeight - (maxActive / maxActive) * (hHeight - 50) - 25} r="4" fill="var(--success)" />
-                  <text 
-                    x={(hourlyData.findIndex(d => d.active_players === maxActive) / 23) * (hWidth - 50) + 25} 
-                    y={hHeight - (maxActive / maxActive) * (hHeight - 50) - 35} 
-                    fill="var(--success)" 
-                    fontSize="9" 
-                    fontWeight="bold"
-                    textAnchor="middle"
-                  >
-                    Peak: {maxActive}
-                  </text>
-                </>
-              )}
             </svg>
           </div>
         </div>
@@ -501,11 +478,11 @@ export default function Overview({ addToast, isLive }) {
       </div>
 
       {/* Mini Info Panel */}
-      <div className="table-card">
+      <div className="table-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
         <h3 style={{ marginBottom: '16px', fontSize: '16px' }}>Dashboard Quick Start</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-            <div style={{ padding: '10px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px', color: 'var(--primary)' }}>
+            <div style={{ padding: '10px', background: 'rgba(92, 60, 230, 0.1)', borderRadius: '10px', color: 'var(--primary)' }}>
               <Play size={20} />
             </div>
             <div>
