@@ -436,7 +436,8 @@ export const api = {
       return db.operations;
     }
 
-    return request('/backoffice/operations');
+    const data = await request('/backoffice/operations');
+    return data.operations || [];
   },
 
   // Helper helper to write operation logs locally
