@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Users, UserCheck, RefreshCw, BarChart2, Flame, Play, Clock, Award } from 'lucide-react';
 import { api } from '../api';
 
-export default function Overview({ addToast, isLive }) {
+export default function Overview({ addToast }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [levelViewMode, setLevelViewMode] = useState('aggregated'); // 'aggregated', 'range', 'hotspots'
@@ -23,7 +23,7 @@ export default function Overview({ addToast, isLive }) {
 
   useEffect(() => {
     fetchStats();
-  }, [isLive]);
+  }, []);
 
   // Adjust rangeEnd default when stats load
   useEffect(() => {

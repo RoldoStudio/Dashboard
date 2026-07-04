@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Shield, LogOut, Menu, X, Globe, User } from 'lucide-react';
+import { LayoutDashboard, Shield, LogOut, Menu, X, User, TrendingUp, Smartphone } from 'lucide-react';
 import Overview from './Overview';
 import Backoffice from './Backoffice';
-import { isLiveMode, setLiveMode } from '../api';
+import AdMobStats from './AdMobStats';
+import PlayStoreStats from './PlayStoreStats';
 
-export default function Dashboard({ user, onLogout, addToast, isLive, onToggleLiveMode }) {
+export default function Dashboard({ user, onLogout, addToast }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -30,6 +31,22 @@ export default function Dashboard({ user, onLogout, addToast, isLive, onToggleLi
           >
             <LayoutDashboard size={18} />
             <span>Overview & Stats</span>
+          </div>
+
+          <div 
+            className={`sidebar-item ${activeTab === 'admob' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('admob'); setMobileMenuOpen(false); }}
+          >
+            <TrendingUp size={18} />
+            <span>AdMob Stats</span>
+          </div>
+
+          <div 
+            className={`sidebar-item ${activeTab === 'playstore' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('playstore'); setMobileMenuOpen(false); }}
+          >
+            <Smartphone size={18} />
+            <span>Play Store Stats</span>
           </div>
 
           <div 
@@ -66,20 +83,13 @@ export default function Dashboard({ user, onLogout, addToast, isLive, onToggleLi
           </button>
 
           <h2 className="page-title">
-            {activeTab === 'overview' ? 'Dashboard Overview' : 'Backoffice Administration'}
+            {activeTab === 'overview' && 'Dashboard Overview'}
+            {activeTab === 'admob' && 'AdMob Performance'}
+            {activeTab === 'playstore' && 'Google Play Store Performance'}
+            {activeTab === 'backoffice' && 'Backoffice Administration'}
           </h2>
 
           <div className="header-actions">
-            {/* Live vs Mock badge */}
-            <div 
-              className={`api-mode-badge ${isLive ? 'live' : 'mock'}`}
-              onClick={onToggleLiveMode}
-              title="Click to toggle targets"
-            >
-              <Globe size={14} />
-              <span>{isLive ? 'Live API' : 'Mock Mode'}</span>
-            </div>
-
             <div className="user-profile">
               <div className="user-avatar">
                 {user.display_name ? user.display_name.charAt(0).toUpperCase() : 'A'}
@@ -93,10 +103,17 @@ export default function Dashboard({ user, onLogout, addToast, isLive, onToggleLi
         </header>
 
         <main className="page-container">
-          {activeTab === 'overview' ? (
-            <Overview addToast={addToast} isLive={isLive} />
-          ) : (
-            <Backoffice addToast={addToast} isLive={isLive} />
+          {activeTab === 'overview' && (
+            <Overview addToast={addToast} />
+          )}
+          {activeTab === 'admob' && (
+            <AdMobStats addToast={addToast} />
+          )}
+          {activeTab === 'playstore' && (
+            <PlayStoreStats addToast={addToast} />
+          )}
+          {activeTab === 'backoffice' && (
+            <Backoffice addToast={addToast} />
           )}
         </main>
       </div>

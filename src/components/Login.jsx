@@ -1,27 +1,11 @@
 import React, { useState } from 'react';
-import { Lock, User, Activity, Globe } from 'lucide-react';
-import { api, isLiveMode, setLiveMode } from '../api';
+import { Lock, User, Activity } from 'lucide-react';
+import { api } from '../api';
 
 export default function Login({ onLoginSuccess, addToast }) {
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('admin');
-  const [isLive, setIsLive] = useState(isLiveMode());
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const handleToggleMode = () => {
-    const nextMode = !isLive;
-    setIsLive(nextMode);
-    setLiveMode(nextMode);
-
-    // Autofill credentials helper
-    if (nextMode) {
-      setUsername('');
-      setPassword('');
-    } else {
-      setUsername('admin');
-      setPassword('admin');
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,20 +42,9 @@ export default function Login({ onLoginSuccess, addToast }) {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group" style={{ marginBottom: '24px' }}>
-            <div
-              className={`api-mode-badge ${isLive ? 'live' : 'mock'}`}
-              onClick={handleToggleMode}
-              style={{ display: 'inline-flex', alignSelf: 'flex-start', margin: '0 auto 8px auto' }}
-            >
-              <Globe size={14} />
-              <span>{isLive ? 'Live API: back.roldostudios.com' : 'Local Mock Database'}</span>
-            </div>
-          </div>
-
           <div className="form-group">
             <label className="form-label" htmlFor="username">
-              {isLive ? 'Admin Username' : 'Username'}
+              Admin Username
             </label>
             <div className="form-input-container">
               <input
@@ -80,7 +53,7 @@ export default function Login({ onLoginSuccess, addToast }) {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder={isLive ? "ton" : "admin"}
+                placeholder="Username"
                 required
               />
               <User className="form-icon" />
@@ -98,7 +71,7 @@ export default function Login({ onLoginSuccess, addToast }) {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Password"
                 required
               />
               <Lock className="form-icon" />

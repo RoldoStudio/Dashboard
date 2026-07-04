@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ToggleLeft, ToggleRight, Edit2, Plus, UserPlus, Coins, Gem, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { api } from '../api';
 
-export default function Backoffice({ addToast, isLive }) {
+export default function Backoffice({ addToast }) {
   const [users, setUsers] = useState([]);
   const [operations, setOperations] = useState([]);
   const [search, setSearch] = useState('');
@@ -44,7 +44,7 @@ export default function Backoffice({ addToast, isLive }) {
       fetchData();
     }, 300); // Debounce search
     return () => clearTimeout(timer);
-  }, [search, isLive]);
+  }, [search]);
 
   const handleToggleStatus = async (userId, currentStatus) => {
     try {
