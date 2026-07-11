@@ -126,6 +126,66 @@ export const api = {
     });
   },
 
+  // Store Catalog management (Admin)
+  async getStoreCatalog() {
+    return request('/store/catalog/admin');
+  },
+
+  async createStoreSkin(skinData) {
+    return request('/store/catalog', {
+      method: 'POST',
+      body: JSON.stringify(skinData)
+    });
+  },
+
+  async updateStoreSkin(skinId, skinData) {
+    return request(`/store/catalog/${skinId}`, {
+      method: 'PUT',
+      body: JSON.stringify(skinData)
+    });
+  },
+
+  async deleteStoreSkin(skinId) {
+    return request(`/store/catalog/${skinId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async uploadSkinImage(skinId, file) {
+    const basicAuth = localStorage.getItem('blockmerge_basic_auth');
+    const headers = {};
+    if (basicAuth) {
+      headers['Authorization'] = `Basic ${basicAuth}`;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}/backoffice/store/catalog/${skinId}/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Failed to upload skin asset image');
+    }
+
+    return response.json();
+  },
+
+  // Store Admin Transactions
+  async getStoreTransactions(params = {}) {
+    const query = new URLSearchParams();
+    if (params.user_id) query.append('user_id', params.user_id);
+    if (params.item_id) query.append('item_id', params.item_id);
+    if (params.transaction_type) query.append('transaction_type', params.transaction_type);
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    
+    return request(`/store/admin/transactions?${query.toString()}`);
+  },
+
   // Operations / Global logs
   async getOperations() {
     const data = await request('/backoffice/operations');

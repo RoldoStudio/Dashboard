@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Shield, LogOut, Menu, X, User, TrendingUp, Smartphone } from 'lucide-react';
+import { LayoutDashboard, Shield, LogOut, Menu, X, User, TrendingUp, Smartphone, ShoppingBag } from 'lucide-react';
 import Overview from './Overview';
 import Backoffice from './Backoffice';
 import AdMobStats from './AdMobStats';
 import PlayStoreStats from './PlayStoreStats';
+import StoreManagement from './StoreManagement';
 
 export default function Dashboard({ user, onLogout, addToast }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -56,6 +57,14 @@ export default function Dashboard({ user, onLogout, addToast }) {
             <Shield size={18} />
             <span>Backoffice Admin</span>
           </div>
+
+          <div 
+            className={`sidebar-item ${activeTab === 'store' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('store'); setMobileMenuOpen(false); }}
+          >
+            <ShoppingBag size={18} />
+            <span>Store Management</span>
+          </div>
         </nav>
 
         <div className="sidebar-footer">
@@ -87,6 +96,7 @@ export default function Dashboard({ user, onLogout, addToast }) {
             {activeTab === 'admob' && 'AdMob Performance'}
             {activeTab === 'playstore' && 'Google Play Store Performance'}
             {activeTab === 'backoffice' && 'Backoffice Administration'}
+            {activeTab === 'store' && 'Store Catalog & Transactions'}
           </h2>
 
           <div className="header-actions">
@@ -114,6 +124,9 @@ export default function Dashboard({ user, onLogout, addToast }) {
           )}
           {activeTab === 'backoffice' && (
             <Backoffice addToast={addToast} />
+          )}
+          {activeTab === 'store' && (
+            <StoreManagement addToast={addToast} />
           )}
         </main>
       </div>
