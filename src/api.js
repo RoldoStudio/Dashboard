@@ -190,5 +190,57 @@ export const api = {
   async getOperations() {
     const data = await request('/backoffice/operations');
     return data.operations || [];
+  },
+
+  // Shop Offers management (Backoffice)
+  async listShopOffers() {
+    return request('/backoffice/store/offers');
+  },
+
+  async createShopOffer(offerData) {
+    return request('/backoffice/store/offers', {
+      method: 'POST',
+      body: JSON.stringify(offerData)
+    });
+  },
+
+  async getShopOffer(offerId) {
+    return request(`/backoffice/store/offers/${offerId}`);
+  },
+
+  async updateShopOffer(offerId, offerData) {
+    return request(`/backoffice/store/offers/${offerId}`, {
+      method: 'PUT',
+      body: JSON.stringify(offerData)
+    });
+  },
+
+  async deleteShopOffer(offerId) {
+    return request(`/backoffice/store/offers/${offerId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Backoffice Analytics
+  async getLevelProgressionStats() {
+    return request('/backoffice/analytics/levels');
+  },
+
+  async getLevelDistribution(params = {}) {
+    const query = new URLSearchParams();
+    if (params.mode) query.append('mode', params.mode);
+    if (params.bin_size) query.append('bin_size', params.bin_size);
+    if (params.range_start) query.append('range_start', params.range_start);
+    if (params.range_end) query.append('range_end', params.range_end);
+    if (params.limit) query.append('limit', params.limit);
+    return request(`/backoffice/analytics/levels/distribution?${query.toString()}`);
+  },
+
+  async getPlayerRetention() {
+    return request('/backoffice/analytics/retention');
+  },
+
+  async getHourlyActivity() {
+    return request('/backoffice/analytics/hourly-activity');
   }
 };

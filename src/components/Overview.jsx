@@ -9,11 +9,36 @@ export default function Overview({ addToast }) {
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(20);
 
+  // New backoffice analytics states
+  const [retention, setRetention] = useState({ d1: 42.5, d7: 18.2, d30: 6.8 });
+  const [hourlyData, setHourlyData] = useState([]);
+  const [levelDistribution, setLevelDistribution] = useState([]);
+  const [levelStats, setLevelStats] = useState([]);
+  const [maxLevelNum, setMaxLevelNum] = useState(1);
+  const [loadingDistribution, setLoadingDistribution] = useState(false);
+
   const fetchStats = async () => {
     setLoading(true);
     try {
-      const data = await api.getStats();
-      setStats(data);
+      // 1. Fetch summary stats
+      const summaryData = await api.getStats();
+      setStats(summaryData);
+
+      // 2. Fetch player retention
+      const retentionData = await api.getPlayerRetention();
+      if (retentionData && retentionData.retention_rate) {
+        setRetention(retentionData.retention_rate);
+      } else if (retentionData) {
+        setRetention(retentionData);
+      }
+
+      // 3. Fetch hourly activity concurrency
+      const hourlyActivityData = await api.getHourlyActivity();
+      setHourlyData(hourlyActivityData.hourly_activity || []);
+
+      // 4. Fetch granular level progression stats table
+      const progressionStats = await api.getLevelProgressionStats();
+      setLevelStats(progressionStats.levels || []);
     } catch (err) {
       addToast(err.message || 'Failed to load stats', 'error');
     } finally {
@@ -21,22 +46,33 @@ export default function Overview({ addToast }) {
     }
   };
 
+  const fetchLevelDistribution = async () => {
+    setLoadingDistribution(true);
+    try {
+      const data = await api.getLevelDistribution({
+        mode: levelViewMode,
+        range_start: rangeStart,
+        range_end: rangeEnd,
+        limit: 15
+      });
+      setLevelDistribution(data.distribution || []);
+      if (data.max_level) {
+        setMaxLevelNum(data.max_level);
+      }
+    } catch (err) {
+      addToast(err.message || 'Failed to load level distribution', 'error');
+    } finally {
+      setLoadingDistribution(false);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, []);
 
-  // Adjust rangeEnd default when stats load
   useEffect(() => {
-    if (stats) {
-      const rawLevelPairs = Object.entries(stats.level_distribution || {})
-        .map(([lvl, val]) => {
-          const num = parseInt(lvl.replace(/[^\d]/g, '')) || 0;
-          return { level: num };
-        });
-      const maxL = rawLevelPairs.length > 0 ? Math.max(...rawLevelPairs.map(p => p.level), 1) : 1;
-      setRangeEnd(Math.min(maxL, 20));
-    }
-  }, [stats]);
+    fetchLevelDistribution();
+  }, [levelViewMode, rangeStart, rangeEnd]);
 
   if (loading) {
     return (
@@ -48,78 +84,10 @@ export default function Overview({ addToast }) {
 
   if (!stats) return null;
 
-  // Level distribution parsing
-  const rawLevelPairs = Object.entries(stats.level_distribution || {})
-    .map(([lvl, val]) => {
-      const num = parseInt(lvl.replace(/[^\d]/g, '')) || 0;
-      return { level: num, count: parseInt(val) || 0 };
-    })
-    .sort((a, b) => a.level - b.level);
-
-  const maxLevelNum = rawLevelPairs.length > 0 ? Math.max(...rawLevelPairs.map(p => p.level), 1) : 1;
-
-  // Determine dynamic bin size for aggregated view
-  let binSize = 1;
-  if (maxLevelNum > 10 && maxLevelNum <= 50) binSize = 5;
-  else if (maxLevelNum > 50 && maxLevelNum <= 200) binSize = 20;
-  else if (maxLevelNum > 200 && maxLevelNum <= 1000) binSize = 100;
-  else if (maxLevelNum > 1000 && maxLevelNum <= 5000) binSize = 500;
-  else if (maxLevelNum > 5000) binSize = 1000;
-
-  // Process data based on mode
-  let processedChartData = [];
-  
-  if (levelViewMode === 'aggregated' && maxLevelNum > 10) {
-    // Group levels into bins (e.g. 1-10, 11-20, etc.)
-    const bins = {};
-    for (let i = 1; i <= maxLevelNum; i += binSize) {
-      const binLabel = `${i}-${Math.min(i + binSize - 1, maxLevelNum)}`;
-      bins[binLabel] = 0;
-    }
-    
-    rawLevelPairs.forEach(pair => {
-      const binIndex = Math.floor((pair.level - 1) / binSize) * binSize + 1;
-      const binLabel = `${binIndex}-${Math.min(binIndex + binSize - 1, maxLevelNum)}`;
-      if (bins[binLabel] !== undefined) {
-        bins[binLabel] += pair.count;
-      }
-    });
-
-    processedChartData = Object.entries(bins).map(([label, val]) => ({
-      label,
-      value: val
-    }));
-  } else if (levelViewMode === 'range') {
-    // Show each level individually in custom range
-    const start = Math.max(1, rangeStart);
-    const end = Math.min(maxLevelNum, rangeEnd);
-    
-    // Seed all levels in range with 0
-    const rangeMap = {};
-    for (let i = start; i <= end; i++) {
-      rangeMap[i] = 0;
-    }
-    rawLevelPairs.forEach(pair => {
-      if (pair.level >= start && pair.level <= end) {
-        rangeMap[pair.level] = pair.count;
-      }
-    });
-    processedChartData = Object.entries(rangeMap).map(([label, val]) => ({
-      label: `Lvl ${label}`,
-      value: val
-    }));
-  } else {
-    // 'hotspots' or 'aggregated' when level count is <= 10
-    // Show top 15 most active levels
-    processedChartData = [...rawLevelPairs]
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 15)
-      .sort((a, b) => a.level - b.level)
-      .map(pair => ({
-        label: `Lvl ${pair.level}`,
-        value: pair.count
-      }));
-  }
+  const processedChartData = levelDistribution.map(d => ({
+    label: d.label,
+    value: d.count
+  }));
 
   const chartValues = processedChartData.map(d => d.value);
   const maxChartVal = Math.max(...chartValues, 1);
@@ -130,7 +98,6 @@ export default function Overview({ addToast }) {
     : 0;
 
   // Retention Curve Calculations (D0 -> D1 -> D7 -> D30)
-  const retention = stats.retention_rate || { d1: 42.5, d7: 18.2, d30: 6.8 };
   const rWidth = 460;
   const rHeight = 150;
   const yD0 = 25;
@@ -141,8 +108,7 @@ export default function Overview({ addToast }) {
   const rAreaPoints = `25,${rHeight - 25} 25,${yD0} 150,${yD1} 275,${yD7} 400,${yD30} 400,${rHeight - 25}`;
 
   // 24h Hourly Trend Calculations
-  const hourlyData = stats.active_players_hourly || [];
-  const maxActive = Math.max(...hourlyData.map(d => d.active_players), 1);
+  const maxActive = hourlyData.length > 0 ? Math.max(...hourlyData.map(d => d.active_players), 1) : 1;
   const hWidth = 460;
   const hHeight = 150;
   const hPoints = hourlyData.map((d, index) => {
@@ -475,6 +441,62 @@ export default function Overview({ addToast }) {
           </div>
         </div>
 
+      </div>
+
+      {/* Level Progression Stats Table */}
+      <div className="table-card" style={{ marginTop: '24px', marginBottom: '24px' }}>
+        <h3 style={{ marginBottom: '16px', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Award size={16} style={{ color: 'var(--primary)' }} />
+          <span>Level Progression Statistics</span>
+        </h3>
+        <div className="table-container">
+          {levelStats.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px', color: 'var(--text-secondary)' }}>
+              No level progression statistics available.
+            </div>
+          ) : (
+            <table className="custom-table">
+              <thead>
+                <tr>
+                  <th>Level</th>
+                  <th>Total Attempts</th>
+                  <th>Win Rate</th>
+                  <th>Average Stars</th>
+                  <th>High Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {levelStats.map(lvl => (
+                  <tr key={lvl.level_number}>
+                    <td style={{ fontWeight: 600, color: 'var(--text-title)' }}>
+                      Level {lvl.level_number}
+                    </td>
+                    <td>
+                      {lvl.total_attempts.toLocaleString()}
+                    </td>
+                    <td>
+                      <span style={{ 
+                        color: lvl.win_rate > 50 ? 'var(--success)' : lvl.win_rate > 25 ? 'var(--warning)' : 'var(--danger)',
+                        fontWeight: 600
+                      }}>
+                        {(lvl.win_rate).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ color: '#f59e0b', fontWeight: 600 }}>{lvl.avg_stars.toFixed(1)}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>/ 3.0</span>
+                      </div>
+                    </td>
+                    <td style={{ fontFamily: 'monospace' }}>
+                      {lvl.high_score.toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Mini Info Panel */}
