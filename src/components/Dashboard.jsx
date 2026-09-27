@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Shield, LogOut, Menu, X, User, TrendingUp, Smartphone, ShoppingBag } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  Shield, 
+  LogOut, 
+  Menu, 
+  X, 
+  TrendingUp, 
+  Smartphone, 
+  ShoppingBag, 
+  Sparkles, 
+  Trophy 
+} from 'lucide-react';
 import Overview from './Overview';
 import Backoffice from './Backoffice';
 import AdMobStats from './AdMobStats';
 import PlayStoreStats from './PlayStoreStats';
 import StoreManagement from './StoreManagement';
+import WheelOfFortune from './WheelOfFortune';
+import Achievements from './Achievements';
 
 export default function Dashboard({ user, onLogout, addToast }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -48,6 +61,22 @@ export default function Dashboard({ user, onLogout, addToast }) {
           >
             <Smartphone size={18} />
             <span>Play Store Stats</span>
+          </div>
+
+          <div 
+            className={`sidebar-item ${activeTab === 'wheel' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('wheel'); setMobileMenuOpen(false); }}
+          >
+            <Sparkles size={18} />
+            <span>Wheel of Fortune</span>
+          </div>
+
+          <div 
+            className={`sidebar-item ${activeTab === 'achievements' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('achievements'); setMobileMenuOpen(false); }}
+          >
+            <Trophy size={18} />
+            <span>Achievements</span>
           </div>
 
           <div 
@@ -95,6 +124,8 @@ export default function Dashboard({ user, onLogout, addToast }) {
             {activeTab === 'overview' && 'Dashboard Overview'}
             {activeTab === 'admob' && 'AdMob Performance'}
             {activeTab === 'playstore' && 'Google Play Store Performance'}
+            {activeTab === 'wheel' && 'Wheel of Fortune & Rewards'}
+            {activeTab === 'achievements' && 'Game Achievements & Tiers'}
             {activeTab === 'backoffice' && 'Backoffice Administration'}
             {activeTab === 'store' && 'Store Catalog & Transactions'}
           </h2>
@@ -121,6 +152,12 @@ export default function Dashboard({ user, onLogout, addToast }) {
           )}
           {activeTab === 'playstore' && (
             <PlayStoreStats addToast={addToast} />
+          )}
+          {activeTab === 'wheel' && (
+            <WheelOfFortune addToast={addToast} />
+          )}
+          {activeTab === 'achievements' && (
+            <Achievements addToast={addToast} />
           )}
           {activeTab === 'backoffice' && (
             <Backoffice addToast={addToast} />

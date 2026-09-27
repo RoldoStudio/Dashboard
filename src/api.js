@@ -2,20 +2,54 @@
 
 const BASE_URL = 'https://back.roldostudios.com';
 const AUTH_TOKEN_KEY = 'blockmerge_auth_token';
+const BASIC_AUTH_KEY = 'blockmerge_basic_auth';
+const PLAYER_TOKEN_KEY = 'blockmerge_player_token';
 
-// Request helper
+// Request helper with intelligent auth dispatching
 async function request(endpoint, options = {}) {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
   };
 
-  const basicAuth = localStorage.getItem('blockmerge_basic_auth');
-  if (basicAuth && !headers['Authorization']) {
-    headers['Authorization'] = `Basic ${basicAuth}`;
-  } else if (token && !headers['Authorization']) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const basicAuth = localStorage.getItem(BASIC_AUTH_KEY);
+  const playerToken = localStorage.getItem(PLAYER_TOKEN_KEY);
+  const adminToken = localStorage.getItem(AUTH_TOKEN_KEY);
+
+  // Determine auth method if not explicitly provided
+  if (!headers['Authorization']) {
+    const authType = options.authType || 'auto';
+
+    if (authType === 'bearer') {
+      const token = options.token || playerToken || adminToken;
+      if (token && token !== 'live-admin-session-placeholder') {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    } else if (authType === 'basic') {
+      if (basicAuth) {
+        headers['Authorization'] = `Basic ${basicAuth}`;
+      }
+    } else {
+      // Auto-detect based on endpoint route
+      const isPlayerEndpoint = endpoint.startsWith('/wheel') || 
+                               endpoint.startsWith('/achievements') || 
+                               endpoint.startsWith('/api/v1/achievements') ||
+                               endpoint.startsWith('/progression');
+
+      if (isPlayerEndpoint) {
+        const token = options.token || playerToken;
+        if (token && token !== 'live-admin-session-placeholder') {
+          headers['Authorization'] = `Bearer ${token}`;
+        } else if (basicAuth) {
+          // Fallback to basic auth if supported by backend
+          headers['Authorization'] = `Basic ${basicAuth}`;
+        }
+      } else if (basicAuth) {
+        headers['Authorization'] = `Basic ${basicAuth}`;
+      } else if (adminToken && adminToken !== 'live-admin-session-placeholder') {
+        headers['Authorization'] = `Bearer ${adminToken}`;
+      }
+    }
   }
 
   const response = await fetch(`${BASE_URL}${endpoint}`, {
@@ -25,20 +59,39 @@ async function request(endpoint, options = {}) {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const error = new Error(errorData.detail || 'API request failed');
+    let errorMessage = 'API request failed';
+    if (typeof errorData.detail === 'string') {
+      errorMessage = errorData.detail;
+    } else if (Array.isArray(errorData.detail) && errorData.detail.length > 0) {
+      errorMessage = errorData.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
+    }
+    const error = new Error(errorMessage);
     error.status = response.status;
+    error.data = errorData;
     throw error;
   }
 
-  return response.json();
+  // Handle empty 200/204 responses (like stats/sync or delete)
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json();
+  }
+  return response.text().then(text => text ? JSON.parse(text) : { success: true });
 }
 
 // Public API Client interface
 export const api = {
+  BASE_URL,
+
+  // Health check
+  async getHealth() {
+    return request('/health', { authType: 'none' });
+  },
+
   // Login
   async login(username, password) {
     const basicAuth = btoa(`${username}:${password}`);
-    localStorage.setItem('blockmerge_basic_auth', basicAuth);
+    localStorage.setItem(BASIC_AUTH_KEY, basicAuth);
     try {
       // Validate credentials by calling stats endpoint
       await request('/stats/summary', {
@@ -60,19 +113,33 @@ export const api = {
         expires_in: 3600
       };
     } catch (err) {
-      localStorage.removeItem('blockmerge_basic_auth');
+      localStorage.removeItem(BASIC_AUTH_KEY);
       throw new Error(err.message || 'Invalid credentials. Please check your username and password.');
     }
   },
 
   logout() {
     localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem('blockmerge_basic_auth');
+    localStorage.removeItem(BASIC_AUTH_KEY);
+    localStorage.removeItem(PLAYER_TOKEN_KEY);
+  },
+
+  // Player Bearer Token Management for Wheel / Achievements / Progression inspection
+  getPlayerToken() {
+    return localStorage.getItem(PLAYER_TOKEN_KEY) || '';
+  },
+
+  setPlayerToken(token) {
+    if (token) {
+      localStorage.setItem(PLAYER_TOKEN_KEY, token.trim());
+    } else {
+      localStorage.removeItem(PLAYER_TOKEN_KEY);
+    }
   },
 
   // Stats
   async getStats() {
-    const basicAuth = localStorage.getItem('blockmerge_basic_auth');
+    const basicAuth = localStorage.getItem(BASIC_AUTH_KEY);
     if (!basicAuth) {
       throw new Error('Unauthorized: No admin credentials stored. Please log in.');
     }
@@ -84,19 +151,43 @@ export const api = {
     });
   },
 
-  // AdMob Stats
-  async getAdMobStats() {
-    return request('/stats/admob');
+  // Force Stats Sync (AdMob + Play Store)
+  async syncStats() {
+    return request('/stats/sync', {
+      method: 'POST',
+      authType: 'basic'
+    });
   },
 
-  // Play Store Stats
-  async getPlayStoreStats() {
-    return request('/stats/playstore');
+  // AdMob Stats with optional date filtering
+  async getAdMobStats(params = {}) {
+    const query = new URLSearchParams();
+    if (params.start_date) query.append('start_date', params.start_date);
+    if (params.end_date) query.append('end_date', params.end_date);
+    const qs = query.toString();
+    return request(`/stats/admob${qs ? `?${qs}` : ''}`);
   },
 
-  // Users Directory (CRUD)
-  async getUsers(search = '') {
-    return request(`/backoffice/users?search=${encodeURIComponent(search)}`);
+  // Play Store Stats with optional date filtering
+  async getPlayStoreStats(params = {}) {
+    const query = new URLSearchParams();
+    if (params.start_date) query.append('start_date', params.start_date);
+    if (params.end_date) query.append('end_date', params.end_date);
+    const qs = query.toString();
+    return request(`/stats/playstore${qs ? `?${qs}` : ''}`);
+  },
+
+  // Users Directory (CRUD) with pagination & search
+  async getUsers(params = {}) {
+    if (typeof params === 'string') {
+      params = { search: params };
+    }
+    const query = new URLSearchParams();
+    if (params.search) query.append('search', params.search);
+    if (params.page) query.append('page', params.page);
+    if (params.limit) query.append('limit', params.limit);
+    const qs = query.toString();
+    return request(`/backoffice/users${qs ? `?${qs}` : ''}`);
   },
 
   async createUser(userData) {
@@ -132,14 +223,14 @@ export const api = {
   },
 
   async createStoreSkin(skinData) {
-    return request('/store/catalog', {
+    return request('/backoffice/store/catalog', {
       method: 'POST',
       body: JSON.stringify(skinData)
     });
   },
 
   async updateStoreSkin(skinId, skinData) {
-    return request(`/store/catalog/${skinId}`, {
+    return request(`/backoffice/store/catalog/${skinId}`, {
       method: 'PUT',
       body: JSON.stringify(skinData)
     });
@@ -151,8 +242,12 @@ export const api = {
     });
   },
 
+  getSkinImageUrl(skinId) {
+    return `${BASE_URL}/store/catalog/skins/${skinId}/image`;
+  },
+
   async uploadSkinImage(skinId, file) {
-    const basicAuth = localStorage.getItem('blockmerge_basic_auth');
+    const basicAuth = localStorage.getItem(BASIC_AUTH_KEY);
     const headers = {};
     if (basicAuth) {
       headers['Authorization'] = `Basic ${basicAuth}`;
@@ -242,5 +337,50 @@ export const api = {
 
   async getHourlyActivity() {
     return request('/backoffice/analytics/hourly-activity');
+  },
+
+  // Wheel of Fortune API
+  async getWheelStatus(customToken = null) {
+    return request('/wheel/status', {
+      authType: 'bearer',
+      token: customToken
+    });
+  },
+
+  async spinWheel(allowPaid = false, customToken = null) {
+    return request('/wheel/spin', {
+      method: 'POST',
+      body: JSON.stringify({ allow_paid: allowPaid }),
+      authType: 'bearer',
+      token: customToken
+    });
+  },
+
+  async getWheelHistory(params = {}, customToken = null) {
+    const query = new URLSearchParams();
+    if (params.limit) query.append('limit', params.limit);
+    if (params.offset !== undefined) query.append('offset', params.offset);
+    const qs = query.toString();
+    return request(`/wheel/history${qs ? `?${qs}` : ''}`, {
+      authType: 'bearer',
+      token: customToken
+    });
+  },
+
+  // Achievements API
+  async getAchievements(customToken = null) {
+    return request('/achievements', {
+      authType: 'bearer',
+      token: customToken
+    });
+  },
+
+  async claimAchievement(achievementId, tier = null, customToken = null) {
+    return request(`/achievements/${achievementId}/claim`, {
+      method: 'POST',
+      body: JSON.stringify({ tier }),
+      authType: 'bearer',
+      token: customToken
+    });
   }
 };

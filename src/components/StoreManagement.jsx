@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Coins, Gem, Database, History, RefreshCw, X, Tag, FileText, Gift } from 'lucide-react';
 import { api } from '../api';
 
@@ -68,7 +68,7 @@ export default function StoreManagement({ addToast }) {
   const [uploadFile, setUploadFile] = useState(null);
 
   // Fetch Skins catalog
-  const fetchSkins = async () => {
+  const fetchSkins = useCallback(async () => {
     setLoadingSkins(true);
     try {
       const data = await api.getStoreCatalog();
@@ -78,10 +78,10 @@ export default function StoreManagement({ addToast }) {
     } finally {
       setLoadingSkins(false);
     }
-  };
+  }, [addToast]);
 
   // Fetch Offers
-  const fetchOffers = async () => {
+  const fetchOffers = useCallback(async () => {
     setLoadingOffers(true);
     try {
       const data = await api.listShopOffers();
@@ -91,10 +91,10 @@ export default function StoreManagement({ addToast }) {
     } finally {
       setLoadingOffers(false);
     }
-  };
+  }, [addToast]);
 
   // Fetch Transactions logs
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     setLoadingTransactions(true);
     try {
       const data = await api.getStoreTransactions({
@@ -110,7 +110,7 @@ export default function StoreManagement({ addToast }) {
     } finally {
       setLoadingTransactions(false);
     }
-  };
+  }, [txUserId, txItemId, txType, txPage, txLimit, addToast]);
 
   useEffect(() => {
     if (activeSubTab === 'catalog') {
@@ -121,7 +121,7 @@ export default function StoreManagement({ addToast }) {
     } else {
       fetchTransactions();
     }
-  }, [activeSubTab]);
+  }, [activeSubTab, fetchSkins, fetchOffers, fetchTransactions]);
 
   useEffect(() => {
     if (activeSubTab === 'transactions') {
@@ -131,13 +131,13 @@ export default function StoreManagement({ addToast }) {
       }, 400); // 400ms debounce
       return () => clearTimeout(delayDebounce);
     }
-  }, [txUserId, txItemId, txType]);
+  }, [activeSubTab, txUserId, txItemId, txType, fetchTransactions]);
 
   useEffect(() => {
     if (activeSubTab === 'transactions') {
       fetchTransactions();
     }
-  }, [txPage]);
+  }, [activeSubTab, txPage, fetchTransactions]);
 
   const handleOpenCreate = () => {
     setFormSkinId('');

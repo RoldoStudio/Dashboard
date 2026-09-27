@@ -1,23 +1,36 @@
-import React, { useEffect, useState } from 'react';
-import { Users, UserCheck, RefreshCw, BarChart2, Flame, Play, Clock, Award } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { 
+  Users, 
+  UserCheck, 
+  RefreshCw, 
+  BarChart2, 
+  Flame, 
+  Play, 
+  Award, 
+  Calendar, 
+  CheckCircle2, 
+  Activity,
+  Server
+} from 'lucide-react';
 import { api } from '../api';
 
 export default function Overview({ addToast }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [syncingStats, setSyncingStats] = useState(false);
+  const [backendHealth, setBackendHealth] = useState(null);
   const [levelViewMode, setLevelViewMode] = useState('aggregated'); // 'aggregated', 'range', 'hotspots'
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(20);
 
-  // New backoffice analytics states
+  // Backoffice analytics states
   const [retention, setRetention] = useState({ d1: 42.5, d7: 18.2, d30: 6.8 });
   const [hourlyData, setHourlyData] = useState([]);
   const [levelDistribution, setLevelDistribution] = useState([]);
   const [levelStats, setLevelStats] = useState([]);
   const [maxLevelNum, setMaxLevelNum] = useState(1);
-  const [loadingDistribution, setLoadingDistribution] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Fetch summary stats
@@ -25,7 +38,7 @@ export default function Overview({ addToast }) {
       setStats(summaryData);
 
       // 2. Fetch player retention
-      const retentionData = await api.getPlayerRetention();
+      const retentionData = await api.getPlayerRetention().catch(() => null);
       if (retentionData && retentionData.retention_rate) {
         setRetention(retentionData.retention_rate);
       } else if (retentionData) {
@@ -33,21 +46,24 @@ export default function Overview({ addToast }) {
       }
 
       // 3. Fetch hourly activity concurrency
-      const hourlyActivityData = await api.getHourlyActivity();
+      const hourlyActivityData = await api.getHourlyActivity().catch(() => ({ hourly_activity: [] }));
       setHourlyData(hourlyActivityData.hourly_activity || []);
 
       // 4. Fetch granular level progression stats table
-      const progressionStats = await api.getLevelProgressionStats();
+      const progressionStats = await api.getLevelProgressionStats().catch(() => ({ levels: [] }));
       setLevelStats(progressionStats.levels || []);
+
+      // 5. Check backend health
+      const health = await api.getHealth().catch(() => ({ status: 'unknown' }));
+      setBackendHealth(health.status);
     } catch (err) {
       addToast(err.message || 'Failed to load stats', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
 
-  const fetchLevelDistribution = async () => {
-    setLoadingDistribution(true);
+  const fetchLevelDistribution = useCallback(async () => {
     try {
       const data = await api.getLevelDistribution({
         mode: levelViewMode,
@@ -61,18 +77,29 @@ export default function Overview({ addToast }) {
       }
     } catch (err) {
       addToast(err.message || 'Failed to load level distribution', 'error');
+    }
+  }, [levelViewMode, rangeStart, rangeEnd, addToast]);
+
+  const handleForceSync = async () => {
+    setSyncingStats(true);
+    try {
+      await api.syncStats();
+      addToast('Daily stats sync triggered successfully across AdMob & Play Store.', 'success');
+      await fetchStats();
+    } catch (err) {
+      addToast(err.message || 'Failed to force stats sync', 'error');
     } finally {
-      setLoadingDistribution(false);
+      setSyncingStats(false);
     }
   };
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [fetchStats]);
 
   useEffect(() => {
     fetchLevelDistribution();
-  }, [levelViewMode, rangeStart, rangeEnd]);
+  }, [fetchLevelDistribution]);
 
   if (loading) {
     return (
@@ -92,7 +119,7 @@ export default function Overview({ addToast }) {
   const chartValues = processedChartData.map(d => d.value);
   const maxChartVal = Math.max(...chartValues, 1);
 
-  //Stickiness Ratio (DAU / MAU)
+  // Stickiness Ratio (DAU / MAU)
   const stickinessRatio = stats.active_players_30d > 0 
     ? ((stats.active_players_24h / stats.active_players_30d) * 100).toFixed(1) 
     : 0;
@@ -111,19 +138,55 @@ export default function Overview({ addToast }) {
   const maxActive = hourlyData.length > 0 ? Math.max(...hourlyData.map(d => d.active_players), 1) : 1;
   const hWidth = 460;
   const hHeight = 150;
-  const hPoints = hourlyData.map((d, index) => {
-    const x = (index / 23) * (hWidth - 50) + 25;
-    const y = hHeight - (d.active_players / maxActive) * (hHeight - 50) - 25;
-    return `${x},${y}`;
-  }).join(' ');
-  const hAreaPoints = hourlyData.length > 0
-    ? `25,${hHeight - 25} ` + hPoints + ` 435,${hHeight - 25}`
-    : '';
 
   return (
     <div>
-      {/* Top Stats Cards Grid */}
-      <div className="stats-grid">
+      {/* Overview Top Action Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: '6px', 
+            padding: '6px 12px', 
+            borderRadius: '20px', 
+            background: backendHealth === 'healthy' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
+            border: backendHealth === 'healthy' ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
+            fontSize: '12px'
+          }}>
+            <Server size={14} style={{ color: backendHealth === 'healthy' ? 'var(--success)' : 'var(--text-muted)' }} />
+            <span style={{ color: 'var(--text-secondary)' }}>Backend:</span>
+            <span style={{ fontWeight: '700', color: backendHealth === 'healthy' ? 'var(--success)' : 'var(--text-primary)' }}>
+              {backendHealth === 'healthy' ? 'Online (Healthy)' : 'Connected'}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className="btn btn-secondary" 
+            onClick={handleForceSync}
+            disabled={syncingStats}
+            style={{ width: 'auto' }}
+            title="Force instant daily synchronization of AdMob and Play Store stats"
+          >
+            <RefreshCw size={15} className={syncingStats ? 'spin-animation' : ''} />
+            <span>{syncingStats ? 'Syncing Stats...' : 'Force Stats Sync'}</span>
+          </button>
+
+          <button 
+            className="btn btn-secondary" 
+            onClick={fetchStats}
+            style={{ width: 'auto' }}
+          >
+            <Activity size={15} />
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Top Stats Cards Grid (now with 5 metrics including 7d WAU) */}
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))' }}>
         <div className="stats-card">
           <div className="stats-header">
             <span className="stats-label">Total Player Base</span>
@@ -133,46 +196,59 @@ export default function Overview({ addToast }) {
           </div>
           <span className="stats-value">{stats.total_players.toLocaleString()}</span>
           <span className="stats-change positive">
-            <span>+12.4%</span> since last month
+            <span>Lifetime</span> registered accounts
           </span>
         </div>
 
         <div className="stats-card">
           <div className="stats-header">
-            <span className="stats-label">Daily Active Users (24h)</span>
+            <span className="stats-label">Daily Active (24h DAU)</span>
             <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
               <Flame size={20} />
             </div>
           </div>
           <span className="stats-value">{stats.active_players_24h.toLocaleString()}</span>
           <span className="stats-change positive">
-            <span>+5.8%</span> compared to yesterday
+            <span>Active</span> within last 24 hours
           </span>
         </div>
 
         <div className="stats-card">
           <div className="stats-header">
-            <span className="stats-label">Monthly Active (30d)</span>
+            <span className="stats-label">Weekly Active (7d WAU)</span>
+            <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
+              <Calendar size={20} />
+            </div>
+          </div>
+          <span className="stats-value">{(stats.active_players_7d ?? 0).toLocaleString()}</span>
+          <span className="stats-change positive">
+            <span>Active</span> in past 7 days
+          </span>
+        </div>
+
+        <div className="stats-card">
+          <div className="stats-header">
+            <span className="stats-label">Monthly Active (30d MAU)</span>
             <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)', color: 'var(--accent)' }}>
               <UserCheck size={20} />
             </div>
           </div>
           <span className="stats-value">{stats.active_players_30d.toLocaleString()}</span>
           <span className="stats-change positive">
-            <span>+8.2%</span> user growth
+            <span>30-day</span> rolling active users
           </span>
         </div>
 
         <div className="stats-card">
           <div className="stats-header">
-            <span className="stats-label">OAuth Conv. Rate</span>
+            <span className="stats-label">OAuth Conversion</span>
             <div className="stats-icon-wrapper" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
-              <RefreshCw size={20} />
+              <CheckCircle2 size={20} />
             </div>
           </div>
           <span className="stats-value">{stats.guest_to_oauth_conversion_rate}%</span>
           <span className="stats-change positive">
-            <span>+3.1%</span> binding optimization
+            <span>Guest to Social</span> link rate
           </span>
         </div>
       </div>
@@ -278,14 +354,12 @@ export default function Overview({ addToast }) {
             <div style={{ display: 'flex', gap: '20px', alignItems: 'center', padding: '10px 0' }}>
               <div style={{ position: 'relative', width: '90px', height: '90px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="90" height="90" viewBox="0 0 36 36">
-                  {/* Background track */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
                     stroke="#222533"
                     strokeWidth="3"
                   />
-                  {/* Gauge fill */}
                   <path
                     d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                     fill="none"
@@ -301,11 +375,11 @@ export default function Overview({ addToast }) {
               </div>
               
               <div style={{ flexGrow: 1 }}>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#f43f5e' }}>
-                  Low Stickiness
+                <div style={{ fontSize: '14px', fontWeight: '700', color: Number(stickinessRatio) > 20 ? 'var(--success)' : '#f43f5e' }}>
+                  {Number(stickinessRatio) > 20 ? 'Strong Stickiness' : 'Growing Stickiness'}
                 </div>
                 <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px', lineHeight: '1.4' }}>
-                  A DAU/MAU ratio of 20%+ is top-tier in hypercasual gaming, showing recurring daily play.
+                  A DAU/MAU ratio of 20%+ is top-tier in puzzle & casual gaming, indicating high recurring retention.
                 </p>
               </div>
             </div>
@@ -365,19 +439,14 @@ export default function Overview({ addToast }) {
                   <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
-              {/* Grid Lines */}
               <line x1="25" y1="25" x2="400" y2="25" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="65" x2="400" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="105" x2="400" y2="105" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="125" x2="400" y2="125" stroke="rgba(255,255,255,0.08)" />
 
-              {/* Area path */}
               <polygon points={rAreaPoints} fill="url(#retention-area-grad)" />
-
-              {/* Line path */}
               <polyline points={rPoints} fill="none" stroke="var(--accent)" strokeWidth="3" />
 
-              {/* Dots & Labels */}
               <circle cx="25" cy={yD0} r="5" fill="var(--text-primary)" stroke="var(--accent)" strokeWidth="2" />
               <text x="25" y={yD0 - 10} fill="var(--text-primary)" fontSize="10" textAnchor="middle" fontWeight="bold">100%</text>
               <text x="25" y={rHeight - 5} fill="var(--text-secondary)" fontSize="10" textAnchor="middle">Install</text>
@@ -407,15 +476,13 @@ export default function Overview({ addToast }) {
           </div>
           <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '180px' }}>
             <svg width="100%" height="150" viewBox={`0 0 ${hWidth} ${hHeight}`} style={{ overflow: 'visible' }}>
-              {/* Grid Lines */}
               <line x1="25" y1="25" x2="435" y2="25" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="65" x2="435" y2="65" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="105" x2="435" y2="105" stroke="rgba(255,255,255,0.05)" strokeDasharray="3" />
               <line x1="25" y1="125" x2="435" y2="125" stroke="rgba(255,255,255,0.08)" />
 
-              {/* 24 vertical bars representing each hour */}
               {hourlyData.map((d, index) => {
-                const x = (index / 23) * (hWidth - 50) + 25 - 4; // Center the 8px wide bar
+                const x = (index / 23) * (hWidth - 50) + 25 - 4;
                 const barHeight = (d.active_players / maxActive) * (hHeight - 50);
                 const y = hHeight - barHeight - 25;
                 return (
@@ -431,7 +498,6 @@ export default function Overview({ addToast }) {
                 );
               })}
 
-              {/* Time stamps */}
               <text x="25" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">00:00</text>
               <text x="127" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">06:00</text>
               <text x="230" y={hHeight - 5} fill="var(--text-secondary)" fontSize="9" textAnchor="middle">12:00</text>
@@ -499,7 +565,7 @@ export default function Overview({ addToast }) {
         </div>
       </div>
 
-      {/* Mini Info Panel */}
+      {/* Quick Start Card */}
       <div className="table-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: '12px' }}>
         <h3 style={{ marginBottom: '16px', fontSize: '16px' }}>Dashboard Quick Start</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px' }}>
