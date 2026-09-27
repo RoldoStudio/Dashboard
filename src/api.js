@@ -3,7 +3,6 @@
 const BASE_URL = 'https://back.roldostudios.com';
 const AUTH_TOKEN_KEY = 'blockmerge_auth_token';
 const BASIC_AUTH_KEY = 'blockmerge_basic_auth';
-const PLAYER_TOKEN_KEY = 'blockmerge_player_token';
 
 // Request helper with intelligent auth dispatching
 async function request(endpoint, options = {}) {
@@ -13,7 +12,6 @@ async function request(endpoint, options = {}) {
   };
 
   const basicAuth = localStorage.getItem(BASIC_AUTH_KEY);
-  const playerToken = localStorage.getItem(PLAYER_TOKEN_KEY);
   const adminToken = localStorage.getItem(AUTH_TOKEN_KEY);
 
   // Determine auth method if not explicitly provided
@@ -21,7 +19,7 @@ async function request(endpoint, options = {}) {
     const authType = options.authType || 'auto';
 
     if (authType === 'bearer') {
-      const token = options.token || playerToken || adminToken;
+      const token = options.token || adminToken;
       if (token && token !== 'live-admin-session-placeholder') {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -30,21 +28,7 @@ async function request(endpoint, options = {}) {
         headers['Authorization'] = `Basic ${basicAuth}`;
       }
     } else {
-      // Auto-detect based on endpoint route
-      const isPlayerEndpoint = endpoint.startsWith('/wheel') || 
-                               endpoint.startsWith('/achievements') || 
-                               endpoint.startsWith('/api/v1/achievements') ||
-                               endpoint.startsWith('/progression');
-
-      if (isPlayerEndpoint) {
-        const token = options.token || playerToken;
-        if (token && token !== 'live-admin-session-placeholder') {
-          headers['Authorization'] = `Bearer ${token}`;
-        } else if (basicAuth) {
-          // Fallback to basic auth if supported by backend
-          headers['Authorization'] = `Basic ${basicAuth}`;
-        }
-      } else if (basicAuth) {
+      if (basicAuth) {
         headers['Authorization'] = `Basic ${basicAuth}`;
       } else if (adminToken && adminToken !== 'live-admin-session-placeholder') {
         headers['Authorization'] = `Bearer ${adminToken}`;
@@ -121,20 +105,6 @@ export const api = {
   logout() {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     localStorage.removeItem(BASIC_AUTH_KEY);
-    localStorage.removeItem(PLAYER_TOKEN_KEY);
-  },
-
-  // Player Bearer Token Management for Wheel / Achievements / Progression inspection
-  getPlayerToken() {
-    return localStorage.getItem(PLAYER_TOKEN_KEY) || '';
-  },
-
-  setPlayerToken(token) {
-    if (token) {
-      localStorage.setItem(PLAYER_TOKEN_KEY, token.trim());
-    } else {
-      localStorage.removeItem(PLAYER_TOKEN_KEY);
-    }
   },
 
   // Stats
@@ -337,50 +307,5 @@ export const api = {
 
   async getHourlyActivity() {
     return request('/backoffice/analytics/hourly-activity');
-  },
-
-  // Wheel of Fortune API
-  async getWheelStatus(customToken = null) {
-    return request('/wheel/status', {
-      authType: 'bearer',
-      token: customToken
-    });
-  },
-
-  async spinWheel(allowPaid = false, customToken = null) {
-    return request('/wheel/spin', {
-      method: 'POST',
-      body: JSON.stringify({ allow_paid: allowPaid }),
-      authType: 'bearer',
-      token: customToken
-    });
-  },
-
-  async getWheelHistory(params = {}, customToken = null) {
-    const query = new URLSearchParams();
-    if (params.limit) query.append('limit', params.limit);
-    if (params.offset !== undefined) query.append('offset', params.offset);
-    const qs = query.toString();
-    return request(`/wheel/history${qs ? `?${qs}` : ''}`, {
-      authType: 'bearer',
-      token: customToken
-    });
-  },
-
-  // Achievements API
-  async getAchievements(customToken = null) {
-    return request('/achievements', {
-      authType: 'bearer',
-      token: customToken
-    });
-  },
-
-  async claimAchievement(achievementId, tier = null, customToken = null) {
-    return request(`/achievements/${achievementId}/claim`, {
-      method: 'POST',
-      body: JSON.stringify({ tier }),
-      authType: 'bearer',
-      token: customToken
-    });
   }
 };
