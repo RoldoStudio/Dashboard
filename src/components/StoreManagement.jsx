@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Coins, Gem, Database, History, RefreshCw, X, Tag, FileText, Gift } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Coins, Gem, Database, History, RefreshCw, X, Tag, FileText, Gift, Zap, Upload } from 'lucide-react';
 import { api } from '../api';
 
 const getImageUrl = (path) => {
@@ -43,6 +43,24 @@ export default function StoreManagement({ addToast }) {
   const [isOfferEditModalOpen, setIsOfferEditModalOpen] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState(null);
 
+  // Powerups state
+  const [powerups, setPowerups] = useState([]);
+  const [loadingPowerups, setLoadingPowerups] = useState(false);
+  const [powerupSearch, setPowerupSearch] = useState('');
+  const [isPowerupCreateModalOpen, setIsPowerupCreateModalOpen] = useState(false);
+  const [isPowerupEditModalOpen, setIsPowerupEditModalOpen] = useState(false);
+  const [selectedPowerup, setSelectedPowerup] = useState(null);
+  const [uploadingPowerupId, setUploadingPowerupId] = useState(null);
+
+  // Powerup form fields
+  const [powerupFormId, setPowerupFormId] = useState('');
+  const [powerupFormName, setPowerupFormName] = useState('');
+  const [powerupFormDescription, setPowerupFormDescription] = useState('');
+  const [powerupFormPriceCoins, setPowerupFormPriceCoins] = useState(100);
+  const [powerupFormPriceGems, setPowerupFormPriceGems] = useState(0);
+  const [powerupFormCategory, setPowerupFormCategory] = useState('utility');
+  const [powerupFormIsActive, setPowerupFormIsActive] = useState(true);
+
   // Offer form fields
   const [offerFormId, setOfferFormId] = useState('');
   const [offerFormName, setOfferFormName] = useState('');
@@ -54,7 +72,7 @@ export default function StoreManagement({ addToast }) {
   const [offerFormEndTime, setOfferFormEndTime] = useState('');
   const [offerFormPurchaseLimit, setOfferFormPurchaseLimit] = useState('');
   const [offerFormIsActive, setOfferFormIsActive] = useState(true);
-  const [offerFormItems, setOfferFormItems] = useState([]); // Array of { skin_id, quantity }
+  const [offerFormItems, setOfferFormItems] = useState([]); // Array of { item_type, skin_id, powerup_id, quantity }
 
   // Form states
   const [formSkinId, setFormSkinId] = useState('');
@@ -93,6 +111,19 @@ export default function StoreManagement({ addToast }) {
     }
   }, [addToast]);
 
+  // Fetch Powerups
+  const fetchPowerups = useCallback(async () => {
+    setLoadingPowerups(true);
+    try {
+      const data = await api.getBackofficePowerups();
+      setPowerups(Array.isArray(data) ? data : []);
+    } catch (err) {
+      addToast(err.message || 'Failed to fetch powerups catalog', 'error');
+    } finally {
+      setLoadingPowerups(false);
+    }
+  }, [addToast]);
+
   // Fetch Transactions logs
   const fetchTransactions = useCallback(async () => {
     setLoadingTransactions(true);
@@ -115,13 +146,16 @@ export default function StoreManagement({ addToast }) {
   useEffect(() => {
     if (activeSubTab === 'catalog') {
       fetchSkins();
+    } else if (activeSubTab === 'powerups') {
+      fetchPowerups();
     } else if (activeSubTab === 'offers') {
       fetchOffers();
       fetchSkins();
+      fetchPowerups();
     } else {
       fetchTransactions();
     }
-  }, [activeSubTab, fetchSkins, fetchOffers, fetchTransactions]);
+  }, [activeSubTab, fetchSkins, fetchPowerups, fetchOffers, fetchTransactions]);
 
   useEffect(() => {
     if (activeSubTab === 'transactions') {
@@ -311,7 +345,12 @@ export default function StoreManagement({ addToast }) {
     setOfferFormEndTime(formatDatetimeLocal(offer.end_time));
     setOfferFormPurchaseLimit(offer.purchase_limit || '');
     setOfferFormIsActive(offer.is_active !== false);
-    setOfferFormItems(offer.items ? offer.items.map(i => ({ skin_id: i.skin_id, quantity: i.quantity || 1 })) : []);
+    setOfferFormItems(offer.items ? offer.items.map(i => ({
+      item_type: i.item_type || (i.powerup_id ? 'powerup' : 'skin'),
+      skin_id: i.skin_id || (skins[0]?.skin_id || ''),
+      powerup_id: i.powerup_id || (powerups[0]?.powerup_id || ''),
+      quantity: i.quantity || 1
+    })) : []);
     setIsOfferEditModalOpen(true);
   };
 
@@ -339,7 +378,9 @@ export default function StoreManagement({ addToast }) {
         purchase_limit: offerFormPurchaseLimit ? parseInt(offerFormPurchaseLimit) : null,
         is_active: offerFormIsActive,
         items: offerFormItems.map(item => ({
-          skin_id: item.skin_id,
+          item_type: item.item_type || (item.powerup_id ? 'powerup' : 'skin'),
+          skin_id: (item.item_type === 'powerup' || item.powerup_id) ? null : item.skin_id,
+          powerup_id: (item.item_type === 'powerup' || item.powerup_id) ? item.powerup_id : null,
           quantity: parseInt(item.quantity) || 1
         }))
       });
@@ -374,7 +415,9 @@ export default function StoreManagement({ addToast }) {
         purchase_limit: offerFormPurchaseLimit ? parseInt(offerFormPurchaseLimit) : null,
         is_active: offerFormIsActive,
         items: offerFormItems.map(item => ({
-          skin_id: item.skin_id,
+          item_type: item.item_type || (item.powerup_id ? 'powerup' : 'skin'),
+          skin_id: (item.item_type === 'powerup' || item.powerup_id) ? null : item.skin_id,
+          powerup_id: (item.item_type === 'powerup' || item.powerup_id) ? item.powerup_id : null,
           quantity: parseInt(item.quantity) || 1
         }))
       });
@@ -414,9 +457,8 @@ export default function StoreManagement({ addToast }) {
 
   // Manage items list during creation/editing
   const handleAddOfferItem = () => {
-    const availableSkin = skins.find(s => !offerFormItems.some(i => i.skin_id === s.skin_id));
-    const defaultSkinId = availableSkin ? availableSkin.skin_id : (skins[0]?.skin_id || '');
-    setOfferFormItems([...offerFormItems, { skin_id: defaultSkinId, quantity: 1 }]);
+    const defaultSkinId = skins[0]?.skin_id || '';
+    setOfferFormItems([...offerFormItems, { item_type: 'skin', skin_id: defaultSkinId, powerup_id: null, quantity: 1 }]);
   };
 
   const handleRemoveOfferItem = (index) => {
@@ -427,6 +469,119 @@ export default function StoreManagement({ addToast }) {
     const updated = [...offerFormItems];
     updated[index] = { ...updated[index], [field]: value };
     setOfferFormItems(updated);
+  };
+
+  // Powerup Catalog Handlers
+  const handleTogglePowerupActive = async (powerup) => {
+    try {
+      await api.updateBackofficePowerup(powerup.powerup_id, {
+        is_active: !powerup.is_active
+      });
+      addToast(`Powerup "${powerup.name}" status updated`, 'success');
+      fetchPowerups();
+    } catch (err) {
+      addToast(err.message || 'Failed to update powerup status', 'error');
+    }
+  };
+
+  const handleOpenCreatePowerup = () => {
+    setPowerupFormId('');
+    setPowerupFormName('');
+    setPowerupFormDescription('');
+    setPowerupFormPriceCoins(100);
+    setPowerupFormPriceGems(0);
+    setPowerupFormCategory('utility');
+    setPowerupFormIsActive(true);
+    setIsPowerupCreateModalOpen(true);
+  };
+
+  const handleOpenEditPowerup = (powerup) => {
+    setSelectedPowerup(powerup);
+    setPowerupFormId(powerup.powerup_id);
+    setPowerupFormName(powerup.name || '');
+    setPowerupFormDescription(powerup.description || '');
+    setPowerupFormPriceCoins(powerup.price_coins || 0);
+    setPowerupFormPriceGems(powerup.price_gems || 0);
+    setPowerupFormCategory(powerup.category || 'utility');
+    setPowerupFormIsActive(powerup.is_active ?? true);
+    setIsPowerupEditModalOpen(true);
+  };
+
+  const handleSaveCreatePowerup = async (e) => {
+    e.preventDefault();
+    if (!powerupFormId.trim()) {
+      addToast('Powerup ID is required.', 'error');
+      return;
+    }
+    if (!powerupFormName.trim()) {
+      addToast('Powerup Name is required.', 'error');
+      return;
+    }
+    try {
+      await api.createBackofficePowerup({
+        powerup_id: powerupFormId.trim().toLowerCase(),
+        name: powerupFormName.trim(),
+        description: powerupFormDescription.trim() || null,
+        price_coins: parseInt(powerupFormPriceCoins) || 0,
+        price_gems: parseInt(powerupFormPriceGems) || 0,
+        category: powerupFormCategory.trim() || null
+      });
+      addToast(`Powerup "${powerupFormName}" created successfully.`, 'success');
+      setIsPowerupCreateModalOpen(false);
+      fetchPowerups();
+    } catch (err) {
+      addToast(err.message || 'Failed to create powerup', 'error');
+    }
+  };
+
+  const handleSaveEditPowerup = async (e) => {
+    e.preventDefault();
+    if (!powerupFormName.trim()) {
+      addToast('Powerup Name is required.', 'error');
+      return;
+    }
+    try {
+      await api.updateBackofficePowerup(selectedPowerup.powerup_id, {
+        name: powerupFormName.trim(),
+        description: powerupFormDescription.trim() || null,
+        price_coins: parseInt(powerupFormPriceCoins) || 0,
+        price_gems: parseInt(powerupFormPriceGems) || 0,
+        category: powerupFormCategory.trim() || null,
+        is_active: powerupFormIsActive
+      });
+      addToast(`Powerup "${powerupFormName}" updated successfully.`, 'success');
+      setIsPowerupEditModalOpen(false);
+      fetchPowerups();
+    } catch (err) {
+      addToast(err.message || 'Failed to update powerup', 'error');
+    }
+  };
+
+  const handleDeletePowerup = async (powerupId, name) => {
+    if (!window.confirm(`Are you sure you want to deactivate powerup "${name}" (${powerupId})?`)) {
+      return;
+    }
+    try {
+      await api.deleteBackofficePowerup(powerupId);
+      addToast(`Powerup "${name}" deactivated successfully.`, 'success');
+      fetchPowerups();
+    } catch (err) {
+      addToast(err.message || 'Failed to delete powerup', 'error');
+    }
+  };
+
+  const handleUploadPowerupIconFile = async (powerupId, file) => {
+    if (!file) return;
+    setUploadingPowerupId(powerupId);
+    try {
+      await api.uploadPowerupIcon(powerupId, file);
+      addToast(`Icon uploaded successfully for powerup ${powerupId}`, 'success');
+      fetchPowerups();
+    } catch (err) {
+      addToast(err.message || 'Failed to upload powerup icon', 'error');
+    } finally {
+      setUploadingPowerupId(null);
+    }
   };
 
   // Filter local catalog skins
@@ -451,6 +606,14 @@ export default function StoreManagement({ addToast }) {
         >
           <Database size={16} />
           <span>Skins Catalog</span>
+        </button>
+        <button 
+          className={`btn ${activeSubTab === 'powerups' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setActiveSubTab('powerups')}
+          style={{ width: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          <Zap size={16} />
+          <span>Powerups Catalog</span>
         </button>
         <button 
           className={`btn ${activeSubTab === 'offers' ? 'btn-primary' : 'btn-secondary'}`}
@@ -629,6 +792,188 @@ export default function StoreManagement({ addToast }) {
             </div>
           </div>
         </div>
+      ) : activeSubTab === 'powerups' ? (
+        /* POWERUPS CATALOG VIEW */
+        <div>
+          {/* Controls row */}
+          <div className="table-header-row">
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                className="table-search"
+                placeholder="Search powerups by name, ID or description..."
+                value={powerupSearch}
+                onChange={(e) => setPowerupSearch(e.target.value)}
+              />
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button className="btn btn-secondary" onClick={fetchPowerups} style={{ width: 'auto' }} title="Refresh Powerups">
+                <RefreshCw size={16} className={loadingPowerups ? 'animate-spin' : ''} />
+              </button>
+
+              <button className="btn btn-primary" onClick={handleOpenCreatePowerup} style={{ width: 'auto' }}>
+                <Plus size={16} />
+                <span>New Powerup</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Powerups Table */}
+          <div className="table-card">
+            <div className="table-container">
+              {loadingPowerups ? (
+                <div style={{ textAlign: 'center', padding: '64px', color: 'var(--text-secondary)' }}>
+                  Loading powerups catalog...
+                </div>
+              ) : (
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '60px' }}>Icon</th>
+                      <th>Powerup Details</th>
+                      <th>Category</th>
+                      <th>Coins</th>
+                      <th>Gems</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {powerups
+                      .filter(p => {
+                        const q = powerupSearch.toLowerCase();
+                        return (
+                          p.powerup_id.toLowerCase().includes(q) ||
+                          p.name.toLowerCase().includes(q) ||
+                          (p.description && p.description.toLowerCase().includes(q)) ||
+                          (p.category && p.category.toLowerCase().includes(q))
+                        );
+                      })
+                      .map((p) => (
+                        <tr key={p.powerup_id}>
+                          <td>
+                            <div 
+                              style={{ 
+                                width: '42px', 
+                                height: '42px', 
+                                borderRadius: '8px', 
+                                background: 'rgba(92, 60, 230, 0.1)', 
+                                border: '1px solid rgba(92, 60, 230, 0.25)',
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center',
+                                position: 'relative',
+                                overflow: 'hidden'
+                              }}
+                            >
+                              <img
+                                src={api.getPowerupIconUrl(p.powerup_id)}
+                                alt={p.name}
+                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                              <div style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                                <Zap size={18} style={{ color: 'var(--primary)' }} />
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 600, color: 'var(--text-title)' }}>
+                              {p.name}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                              ID: {p.powerup_id}
+                            </div>
+                            {p.description && (
+                              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px', maxWidth: '280px' }}>
+                                {p.description}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge" style={{ background: 'rgba(255, 255, 255, 0.05)', textTransform: 'capitalize' }}>
+                              {p.category || 'utility'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, color: '#f59e0b' }}>
+                              <Coins size={13} />
+                              {(p.price_coins || 0).toLocaleString()}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, color: 'var(--accent)' }}>
+                              <Gem size={13} />
+                              {(p.price_gems || 0).toLocaleString()}
+                            </div>
+                          </td>
+                          <td>
+                            <span className={`badge ${p.is_active !== false ? 'badge-active' : 'badge-inactive'}`}>
+                              {p.is_active !== false ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                              {/* Upload icon button with hidden input */}
+                              <label
+                                className="btn btn-secondary"
+                                style={{ padding: '6px 8px', borderRadius: '6px', cursor: 'pointer', margin: 0 }}
+                                title="Upload Icon File"
+                              >
+                                <Upload size={14} className={uploadingPowerupId === p.powerup_id ? 'animate-spin' : ''} />
+                                <input
+                                  type="file"
+                                  accept="image/png, image/jpeg"
+                                  style={{ display: 'none' }}
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      handleUploadPowerupIconFile(p.powerup_id, e.target.files[0]);
+                                    }
+                                  }}
+                                />
+                              </label>
+
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '6px 8px', borderRadius: '6px' }}
+                                onClick={() => handleTogglePowerupActive(p)}
+                                title={p.is_active !== false ? 'Deactivate Powerup' : 'Activate Powerup'}
+                              >
+                                {p.is_active !== false ? <ToggleRight size={18} style={{ color: 'var(--success)' }} /> : <ToggleLeft size={18} style={{ color: 'var(--text-muted)' }} />}
+                              </button>
+
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '6px 8px', borderRadius: '6px' }}
+                                onClick={() => handleOpenEditPowerup(p)}
+                                title="Edit Powerup"
+                              >
+                                <Edit2 size={13} />
+                              </button>
+
+                              <button 
+                                className="btn btn-secondary" 
+                                style={{ padding: '6px 8px', borderRadius: '6px' }}
+                                onClick={() => handleDeletePowerup(p.powerup_id, p.name)}
+                                title="Delete / Deactivate"
+                              >
+                                <Trash2 size={13} style={{ color: 'var(--danger)' }} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
       ) : activeSubTab === 'offers' ? (
         /* OFFERS VIEW */
         <div>
@@ -711,6 +1056,21 @@ export default function StoreManagement({ addToast }) {
                           <td>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                               {offer.items && offer.items.map((item, idx) => {
+                                const isPowerup = item.item_type === 'powerup' || Boolean(item.powerup_id);
+                                if (isPowerup) {
+                                  const matchedPowerup = powerups.find(p => p.powerup_id === item.powerup_id);
+                                  return (
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
+                                      <Zap size={14} style={{ color: 'var(--primary)' }} />
+                                      <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>
+                                        {matchedPowerup ? matchedPowerup.name : item.powerup_id}
+                                      </span>
+                                      <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>
+                                        (x{item.quantity})
+                                      </span>
+                                    </div>
+                                  );
+                                }
                                 const matchedSkin = skins.find(s => s.skin_id === item.skin_id);
                                 return (
                                   <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
@@ -1360,7 +1720,7 @@ export default function StoreManagement({ addToast }) {
               {/* Items list manager */}
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', margin: '16px 0', background: 'rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Included Skins / Items</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Included Items (Skins & Powerups)</span>
                   <button type="button" className="btn btn-secondary" onClick={handleAddOfferItem} style={{ width: 'auto', padding: '4px 10px', fontSize: '12px' }}>
                     + Add Item
                   </button>
@@ -1368,23 +1728,56 @@ export default function StoreManagement({ addToast }) {
 
                 {offerFormItems.length === 0 ? (
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px' }}>
-                    No items added. Add at least one skin to the offer.
+                    No items added. Add at least one skin or powerup to the offer.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {offerFormItems.map((item, idx) => (
-                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr auto', gap: '12px', alignItems: 'center' }}>
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 80px auto', gap: '10px', alignItems: 'center' }}>
                         <select
                           className="form-input"
-                          value={item.skin_id}
-                          onChange={(e) => handleUpdateOfferItem(idx, 'skin_id', e.target.value)}
+                          value={item.item_type || 'skin'}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            handleUpdateOfferItem(idx, 'item_type', newType);
+                            if (newType === 'skin') {
+                              handleUpdateOfferItem(idx, 'skin_id', skins[0]?.skin_id || '');
+                              handleUpdateOfferItem(idx, 'powerup_id', null);
+                            } else {
+                              handleUpdateOfferItem(idx, 'powerup_id', powerups[0]?.powerup_id || 'bomb');
+                              handleUpdateOfferItem(idx, 'skin_id', null);
+                            }
+                          }}
                         >
-                          {skins.map(s => (
-                            <option key={s.skin_id} value={s.skin_id}>
-                              {s.name} ({s.skin_id})
-                            </option>
-                          ))}
+                          <option value="skin">Skin</option>
+                          <option value="powerup">Powerup</option>
                         </select>
+
+                        {item.item_type === 'powerup' ? (
+                          <select
+                            className="form-input"
+                            value={item.powerup_id || ''}
+                            onChange={(e) => handleUpdateOfferItem(idx, 'powerup_id', e.target.value)}
+                          >
+                            {powerups.map(p => (
+                              <option key={p.powerup_id} value={p.powerup_id}>
+                                {p.name} ({p.powerup_id})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <select
+                            className="form-input"
+                            value={item.skin_id || ''}
+                            onChange={(e) => handleUpdateOfferItem(idx, 'skin_id', e.target.value)}
+                          >
+                            {skins.map(s => (
+                              <option key={s.skin_id} value={s.skin_id}>
+                                {s.name} ({s.skin_id})
+                              </option>
+                            ))}
+                          </select>
+                        )}
 
                         <input
                           type="number"
@@ -1548,7 +1941,7 @@ export default function StoreManagement({ addToast }) {
               {/* Items list manager */}
               <div style={{ border: '1px solid var(--border-color)', borderRadius: '8px', padding: '16px', margin: '16px 0', background: 'rgba(0,0,0,0.1)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Included Skins / Items</span>
+                  <span style={{ fontSize: '14px', fontWeight: 600 }}>Included Items (Skins & Powerups)</span>
                   <button type="button" className="btn btn-secondary" onClick={handleAddOfferItem} style={{ width: 'auto', padding: '4px 10px', fontSize: '12px' }}>
                     + Add Item
                   </button>
@@ -1556,23 +1949,56 @@ export default function StoreManagement({ addToast }) {
 
                 {offerFormItems.length === 0 ? (
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '12px' }}>
-                    No items added. Add at least one skin to the offer.
+                    No items added. Add at least one skin or powerup to the offer.
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {offerFormItems.map((item, idx) => (
-                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '3fr 1fr auto', gap: '12px', alignItems: 'center' }}>
+                      <div key={idx} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 80px auto', gap: '10px', alignItems: 'center' }}>
                         <select
                           className="form-input"
-                          value={item.skin_id}
-                          onChange={(e) => handleUpdateOfferItem(idx, 'skin_id', e.target.value)}
+                          value={item.item_type || 'skin'}
+                          onChange={(e) => {
+                            const newType = e.target.value;
+                            handleUpdateOfferItem(idx, 'item_type', newType);
+                            if (newType === 'skin') {
+                              handleUpdateOfferItem(idx, 'skin_id', skins[0]?.skin_id || '');
+                              handleUpdateOfferItem(idx, 'powerup_id', null);
+                            } else {
+                              handleUpdateOfferItem(idx, 'powerup_id', powerups[0]?.powerup_id || 'bomb');
+                              handleUpdateOfferItem(idx, 'skin_id', null);
+                            }
+                          }}
                         >
-                          {skins.map(s => (
-                            <option key={s.skin_id} value={s.skin_id}>
-                              {s.name} ({s.skin_id})
-                            </option>
-                          ))}
+                          <option value="skin">Skin</option>
+                          <option value="powerup">Powerup</option>
                         </select>
+
+                        {item.item_type === 'powerup' ? (
+                          <select
+                            className="form-input"
+                            value={item.powerup_id || ''}
+                            onChange={(e) => handleUpdateOfferItem(idx, 'powerup_id', e.target.value)}
+                          >
+                            {powerups.map(p => (
+                              <option key={p.powerup_id} value={p.powerup_id}>
+                                {p.name} ({p.powerup_id})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <select
+                            className="form-input"
+                            value={item.skin_id || ''}
+                            onChange={(e) => handleUpdateOfferItem(idx, 'skin_id', e.target.value)}
+                          >
+                            {skins.map(s => (
+                              <option key={s.skin_id} value={s.skin_id}>
+                                {s.name} ({s.skin_id})
+                              </option>
+                            ))}
+                          </select>
+                        )}
 
                         <input
                           type="number"
@@ -1610,6 +2036,214 @@ export default function StoreManagement({ addToast }) {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" style={{ width: 'auto' }}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Powerup Modal */}
+      {isPowerupCreateModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '520px', width: '100%' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Zap size={20} style={{ color: 'var(--primary)' }} />
+                <h3>Create New Powerup</h3>
+              </div>
+              <button className="modal-close" onClick={() => setIsPowerupCreateModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveCreatePowerup}>
+              <div className="form-group">
+                <label className="form-label">Powerup ID (Slug)*</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. hammer, time_freeze, bomb"
+                  value={powerupFormId}
+                  onChange={(e) => setPowerupFormId(e.target.value)}
+                  required
+                />
+                <small style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Unique identifier used in gameplay & engine</small>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Display Name*</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="e.g. Block Smasher"
+                  value={powerupFormName}
+                  onChange={(e) => setPowerupFormName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-input"
+                  rows={2}
+                  placeholder="Explains what this powerup does during gameplay..."
+                  value={powerupFormDescription}
+                  onChange={(e) => setPowerupFormDescription(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Category</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="utility, booster, weapon"
+                  value={powerupFormCategory}
+                  onChange={(e) => setPowerupFormCategory(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Price (Coins)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    value={powerupFormPriceCoins}
+                    onChange={(e) => setPowerupFormPriceCoins(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Price (Gems)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    value={powerupFormPriceGems}
+                    onChange={(e) => setPowerupFormPriceGems(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsPowerupCreateModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Create Powerup
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Powerup Modal */}
+      {isPowerupEditModalOpen && selectedPowerup && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '520px', width: '100%' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Zap size={20} style={{ color: 'var(--primary)' }} />
+                <h3>Edit Powerup: {selectedPowerup.name}</h3>
+              </div>
+              <button className="modal-close" onClick={() => setIsPowerupEditModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditPowerup}>
+              <div className="form-group">
+                <label className="form-label">Powerup ID</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={selectedPowerup.powerup_id}
+                  disabled
+                  style={{ opacity: 0.6, cursor: 'not-allowed' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Display Name*</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={powerupFormName}
+                  onChange={(e) => setPowerupFormName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-input"
+                  rows={2}
+                  value={powerupFormDescription}
+                  onChange={(e) => setPowerupFormDescription(e.target.value)}
+                  style={{ resize: 'vertical' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Category</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={powerupFormCategory}
+                  onChange={(e) => setPowerupFormCategory(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Price (Coins)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    value={powerupFormPriceCoins}
+                    onChange={(e) => setPowerupFormPriceCoins(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Price (Gems)</label>
+                  <input
+                    type="number"
+                    className="form-input"
+                    min="0"
+                    value={powerupFormPriceGems}
+                    onChange={(e) => setPowerupFormPriceGems(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0' }}>
+                <input
+                  type="checkbox"
+                  id="powerupFormIsActive"
+                  checked={powerupFormIsActive}
+                  onChange={(e) => setPowerupFormIsActive(e.target.checked)}
+                  style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                />
+                <label htmlFor="powerupFormIsActive" style={{ cursor: 'pointer', fontSize: '13px', userSelect: 'none' }}>
+                  Powerup is active and usable in game
+                </label>
+              </div>
+
+              <div className="modal-footer" style={{ marginTop: '20px' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setIsPowerupEditModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
                   Save Changes
                 </button>
               </div>

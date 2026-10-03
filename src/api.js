@@ -251,6 +251,151 @@ export const api = {
     return request(`/store/admin/transactions?${query.toString()}`);
   },
 
+  // Backoffice Skins Endpoints (CRUD)
+  async getBackofficeSkins() {
+    return request('/backoffice/skins');
+  },
+
+  async getBackofficeSkin(skinId) {
+    return request(`/backoffice/skins/${skinId}`);
+  },
+
+  async createBackofficeSkin(skinData) {
+    return request('/backoffice/skins', {
+      method: 'POST',
+      body: JSON.stringify(skinData)
+    });
+  },
+
+  async updateBackofficeSkin(skinId, skinData) {
+    return request(`/backoffice/skins/${skinId}`, {
+      method: 'PUT',
+      body: JSON.stringify(skinData)
+    });
+  },
+
+  async deleteBackofficeSkin(skinId) {
+    return request(`/backoffice/skins/${skinId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // Backoffice Powerups Endpoints (CRUD + Icons)
+  async getBackofficePowerups() {
+    return request('/backoffice/powerups');
+  },
+
+  async getBackofficePowerup(powerupId) {
+    return request(`/backoffice/powerups/${powerupId}`);
+  },
+
+  async createBackofficePowerup(powerupData) {
+    return request('/backoffice/powerups', {
+      method: 'POST',
+      body: JSON.stringify(powerupData)
+    });
+  },
+
+  async updateBackofficePowerup(powerupId, powerupData) {
+    return request(`/backoffice/powerups/${powerupId}`, {
+      method: 'PUT',
+      body: JSON.stringify(powerupData)
+    });
+  },
+
+  async deleteBackofficePowerup(powerupId) {
+    return request(`/backoffice/powerups/${powerupId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  getPowerupIconUrl(powerupId) {
+    return `${BASE_URL}/powerups/${powerupId}/icon`;
+  },
+
+  async uploadPowerupIcon(powerupId, file) {
+    const basicAuth = localStorage.getItem(BASIC_AUTH_KEY);
+    const headers = {};
+    if (basicAuth) {
+      headers['Authorization'] = `Basic ${basicAuth}`;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}/backoffice/powerups/${powerupId}/upload`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Failed to upload powerup icon');
+    }
+
+    return response.json();
+  },
+
+  // Backoffice User Inventory & Grants
+  async getUserInventory(userId) {
+    return request(`/backoffice/users/${userId}/inventory`);
+  },
+
+  async grantUserPowerups(userId, powerupId, amount) {
+    return request(`/backoffice/users/${userId}/powerups/grant`, {
+      method: 'POST',
+      body: JSON.stringify({
+        powerup_id: powerupId,
+        amount: Number(amount)
+      })
+    });
+  },
+
+  async grantUserSkin(userId, skinId) {
+    return request(`/backoffice/users/${userId}/skins/grant`, {
+      method: 'POST',
+      body: JSON.stringify({
+        skin_id: skinId
+      })
+    });
+  },
+
+  // Backoffice Achievements Management (CRUD + Reload)
+  async getBackofficeAchievements(category = null) {
+    const query = category ? `?category=${encodeURIComponent(category)}` : '';
+    return request(`/backoffice/achievements${query}`);
+  },
+
+  async getBackofficeAchievement(achievementId) {
+    return request(`/backoffice/achievements/${achievementId}`);
+  },
+
+  async createBackofficeAchievement(achievementData) {
+    return request('/backoffice/achievements', {
+      method: 'POST',
+      body: JSON.stringify(achievementData)
+    });
+  },
+
+  async updateBackofficeAchievement(achievementId, achievementData) {
+    return request(`/backoffice/achievements/${achievementId}`, {
+      method: 'PUT',
+      body: JSON.stringify(achievementData)
+    });
+  },
+
+  async deleteBackofficeAchievement(achievementId) {
+    return request(`/backoffice/achievements/${achievementId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async reloadAchievementsCatalog() {
+    return request('/backoffice/achievements/reload', {
+      method: 'POST'
+    });
+  },
+
   // Operations / Global logs
   async getOperations() {
     const data = await request('/backoffice/operations');

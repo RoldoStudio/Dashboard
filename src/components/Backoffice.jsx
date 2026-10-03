@@ -13,7 +13,11 @@ import {
   ChevronLeft, 
   ChevronRight,
   RotateCw,
-  X
+  X,
+  Package,
+  Gift,
+  Zap,
+  Tag
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -33,6 +37,19 @@ export default function Backoffice({ addToast }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Inventory & Grants Modal state
+  const [isInventoryModalOpen, setIsInventoryModalOpen] = useState(false);
+  const [inventoryUser, setInventoryUser] = useState(null);
+  const [userInventory, setUserInventory] = useState({ skins: [], powerups: {} });
+  const [loadingInventory, setLoadingInventory] = useState(false);
+  const [availableSkins, setAvailableSkins] = useState([]);
+  const [availablePowerups, setAvailablePowerups] = useState([]);
+  const [grantSkinId, setGrantSkinId] = useState('');
+  const [grantPowerupId, setGrantPowerupId] = useState('');
+  const [grantPowerupAmount, setGrantPowerupAmount] = useState(1);
+  const [grantingSkin, setGrantingSkin] = useState(false);
+  const [grantingPowerup, setGrantingPowerup] = useState(false);
 
   // Edit form state
   const [editCoins, setEditCoins] = useState(0);
@@ -148,6 +165,71 @@ export default function Backoffice({ addToast }) {
   const handleCopyId = (userId) => {
     navigator.clipboard.writeText(userId);
     addToast(`User ID copied to clipboard: ${userId}`, 'info');
+  };
+
+  const handleOpenInventory = async (user) => {
+    setInventoryUser(user);
+    setIsInventoryModalOpen(true);
+    setLoadingInventory(true);
+    try {
+      const [inv, skinsData, powerupsData] = await Promise.all([
+        api.getUserInventory(user.user_id),
+        api.getBackofficeSkins().catch(() => api.getStoreCatalog().then(d => d.skins || [])).catch(() => []),
+        api.getBackofficePowerups().catch(() => [])
+      ]);
+      setUserInventory(inv || { skins: [], powerups: {} });
+      const skins = Array.isArray(skinsData) ? skinsData : (skinsData.skins || []);
+      const powerups = Array.isArray(powerupsData) ? powerupsData : [];
+      setAvailableSkins(skins);
+      setAvailablePowerups(powerups);
+      if (skins.length > 0) setGrantSkinId(skins[0].skin_id);
+      if (powerups.length > 0) setGrantPowerupId(powerups[0].powerup_id);
+    } catch (err) {
+      addToast(err.message || 'Failed to load user inventory', 'error');
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
+
+  const refreshUserInventory = async (userId) => {
+    try {
+      const inv = await api.getUserInventory(userId);
+      setUserInventory(inv || { skins: [], powerups: {} });
+    } catch (err) {
+      addToast(err.message || 'Failed to refresh inventory', 'error');
+    }
+  };
+
+  const handleGrantSkin = async (e) => {
+    e.preventDefault();
+    if (!grantSkinId) return;
+    setGrantingSkin(true);
+    try {
+      await api.grantUserSkin(inventoryUser.user_id, grantSkinId);
+      addToast(`Successfully granted skin '${grantSkinId}' to ${inventoryUser.display_name || inventoryUser.user_id}`, 'success');
+      await refreshUserInventory(inventoryUser.user_id);
+      fetchOperations();
+    } catch (err) {
+      addToast(err.message || 'Failed to grant skin', 'error');
+    } finally {
+      setGrantingSkin(false);
+    }
+  };
+
+  const handleGrantPowerup = async (e) => {
+    e.preventDefault();
+    if (!grantPowerupId || grantPowerupAmount <= 0) return;
+    setGrantingPowerup(true);
+    try {
+      const res = await api.grantUserPowerups(inventoryUser.user_id, grantPowerupId, grantPowerupAmount);
+      addToast(`Successfully granted ${grantPowerupAmount}x '${grantPowerupId}' (new total: ${res.new_quantity})`, 'success');
+      await refreshUserInventory(inventoryUser.user_id);
+      fetchOperations();
+    } catch (err) {
+      addToast(err.message || 'Failed to grant powerup', 'error');
+    } finally {
+      setGrantingPowerup(false);
+    }
   };
 
   return (
@@ -295,6 +377,15 @@ export default function Backoffice({ addToast }) {
                       </td>
                       <td style={{ textAlign: 'right' }}>
                         <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ padding: '6px 8px', borderRadius: '6px' }}
+                            onClick={() => handleOpenInventory(u)}
+                            title="Inspect Inventory & Grant Items"
+                          >
+                            <Package size={14} style={{ color: 'var(--accent)' }} />
+                          </button>
+
                           <button 
                             className="btn btn-secondary" 
                             style={{ padding: '6px 8px', borderRadius: '6px' }}
@@ -566,6 +657,215 @@ export default function Backoffice({ addToast }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Inventory & Grants Modal */}
+      {isInventoryModalOpen && inventoryUser && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '680px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Package size={20} style={{ color: 'var(--accent)' }} />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px' }}>User Inventory & Item Grants</h3>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    {inventoryUser.display_name || 'User'} ({inventoryUser.user_id})
+                  </div>
+                </div>
+              </div>
+              <button className="modal-close" onClick={() => setIsInventoryModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {loadingInventory ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <RotateCw size={24} className="animate-spin" style={{ margin: '0 auto 12px auto' }} />
+                <div>Fetching player inventory records...</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Current progression balances */}
+                <div style={{ display: 'flex', gap: '16px', background: 'rgba(255, 255, 255, 0.03)', padding: '12px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                    <Coins size={15} style={{ color: '#f59e0b' }} />
+                    <span style={{ color: 'var(--text-muted)' }}>Coins:</span>
+                    <strong>{(inventoryUser.progression?.coins || 0).toLocaleString()}</strong>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                    <Gem size={15} style={{ color: 'var(--accent)' }} />
+                    <span style={{ color: 'var(--text-muted)' }}>Gems:</span>
+                    <strong>{(inventoryUser.progression?.gems || 0).toLocaleString()}</strong>
+                  </div>
+                  <button 
+                    className="btn btn-secondary" 
+                    style={{ marginLeft: 'auto', padding: '4px 8px', fontSize: '11px', width: 'auto' }}
+                    onClick={() => refreshUserInventory(inventoryUser.user_id)}
+                    title="Refresh Inventory"
+                  >
+                    <RotateCw size={12} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+
+                {/* Unlocked Skins Section */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '16px', background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Tag size={16} style={{ color: 'var(--secondary)' }} />
+                      <h4 style={{ fontSize: '14px', margin: 0 }}>Unlocked Skins ({userInventory.skins?.length || 0})</h4>
+                    </div>
+                  </div>
+
+                  {userInventory.skins && userInventory.skins.length > 0 ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+                      {userInventory.skins.map((skin) => (
+                        <div 
+                          key={skin.skin_id}
+                          style={{
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <Tag size={12} style={{ color: 'var(--secondary)' }} />
+                          <span style={{ fontWeight: 600 }}>{skin.name || skin.skin_id}</span>
+                          <span style={{ color: 'var(--text-muted)', fontSize: '10px' }}>({skin.skin_id})</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '16px', fontStyle: 'italic' }}>
+                      No custom skins currently unlocked for this user.
+                    </div>
+                  )}
+
+                  {/* Grant Skin Form */}
+                  <form onSubmit={handleGrantSkin} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <select
+                      className="form-input"
+                      value={grantSkinId}
+                      onChange={(e) => setGrantSkinId(e.target.value)}
+                      style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+                    >
+                      {availableSkins.map((s) => (
+                        <option key={s.skin_id} value={s.skin_id}>
+                          {s.name} ({s.skin_id})
+                        </option>
+                      ))}
+                    </select>
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary" 
+                      disabled={grantingSkin || !grantSkinId}
+                      style={{ width: 'auto', padding: '8px 16px', fontSize: '13px' }}
+                    >
+                      <Gift size={14} />
+                      <span>{grantingSkin ? 'Granting...' : 'Grant Skin'}</span>
+                    </button>
+                  </form>
+                </div>
+
+                {/* Powerups Inventory Section */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '16px', background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Zap size={16} style={{ color: 'var(--primary)' }} />
+                      <h4 style={{ fontSize: '14px', margin: 0 }}>
+                        Powerup Inventory ({Object.keys(userInventory.powerups || {}).length} types)
+                      </h4>
+                    </div>
+                  </div>
+
+                  {userInventory.powerups && Object.keys(userInventory.powerups).length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '10px', marginBottom: '16px' }}>
+                      {Object.entries(userInventory.powerups).map(([pId, qty]) => (
+                        <div 
+                          key={pId}
+                          style={{
+                            background: 'rgba(92, 60, 230, 0.1)',
+                            border: '1px solid rgba(92, 60, 230, 0.3)',
+                            padding: '10px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            textAlign: 'center'
+                          }}
+                        >
+                          <Zap size={18} style={{ color: 'var(--accent)', marginBottom: '4px' }} />
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>{pId}</span>
+                          <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--accent)', marginTop: '2px' }}>
+                            x{qty}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginBottom: '16px', fontStyle: 'italic' }}>
+                      Player has 0 powerups in their current inventory.
+                    </div>
+                  )}
+
+                  {/* Grant Powerup Form */}
+                  <form onSubmit={handleGrantPowerup} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <select
+                      className="form-input"
+                      value={grantPowerupId}
+                      onChange={(e) => setGrantPowerupId(e.target.value)}
+                      style={{ flex: 2, padding: '8px 12px', fontSize: '13px' }}
+                    >
+                      {availablePowerups.length > 0 ? (
+                        availablePowerups.map((p) => (
+                          <option key={p.powerup_id} value={p.powerup_id}>
+                            {p.name} ({p.powerup_id})
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="bomb">Bomb</option>
+                          <option value="undo">Undo</option>
+                          <option value="shuffle">Shuffle</option>
+                        </>
+                      )}
+                    </select>
+
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={grantPowerupAmount}
+                      onChange={(e) => setGrantPowerupAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                      min="1"
+                      placeholder="Qty"
+                      style={{ flex: 1, padding: '8px 12px', fontSize: '13px' }}
+                    />
+
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary" 
+                      disabled={grantingPowerup || !grantPowerupId}
+                      style={{ width: 'auto', padding: '8px 16px', fontSize: '13px' }}
+                    >
+                      <Zap size={14} />
+                      <span>{grantingPowerup ? 'Granting...' : 'Grant Powerup'}</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            <div className="modal-footer" style={{ marginTop: '20px' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsInventoryModalOpen(false)}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

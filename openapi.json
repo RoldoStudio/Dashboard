@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "BlockMerge Backend",
-    "description": "Backend API for BlockMerge Unity game",
+    "description": "Backend API for PurringBlocks Unity game",
     "version": "1.0.0"
   },
   "paths": {
@@ -1625,6 +1625,730 @@
         }
       }
     },
+    "/backoffice/skins": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Store Skins",
+        "description": "Retrieve all skins (active and inactive) for backoffice.",
+        "operationId": "list_store_skins_backoffice_skins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkinSchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Store Skins Backoffice Skins Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Skin Alias",
+        "description": "Alias for /store/catalog to create a skin.",
+        "operationId": "create_skin_alias_backoffice_skins_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/backoffice/skins/{skin_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Store Skin",
+        "description": "Retrieve details for a single skin.",
+        "operationId": "get_store_skin_backoffice_skins__skin_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Skin Alias",
+        "description": "Alias for /store/catalog/{skin_id} to update a skin.",
+        "operationId": "update_skin_alias_backoffice_skins__skin_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Store Skin",
+        "description": "Soft-delete a skin by setting is_active = False.",
+        "operationId": "delete_store_skin_backoffice_skins__skin_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/skins/{skin_id}/upload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upload Skin Image Alias",
+        "description": "Upload skin asset image under /skins path.",
+        "operationId": "upload_skin_image_alias_backoffice_skins__skin_id__upload_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_skin_image_alias_backoffice_skins__skin_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/powerups": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Backoffice Powerups",
+        "description": "Retrieve all powerup definitions (active and inactive).",
+        "operationId": "list_backoffice_powerups_backoffice_powerups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PowerupResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Backoffice Powerups Backoffice Powerups Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Backoffice Powerup",
+        "description": "Create a new powerup catalog definition.",
+        "operationId": "create_backoffice_powerup_backoffice_powerups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PowerupCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/backoffice/powerups/{powerup_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Backoffice Powerup",
+        "description": "Retrieve a single powerup definition by ID.",
+        "operationId": "get_backoffice_powerup_backoffice_powerups__powerup_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Backoffice Powerup",
+        "description": "Update an existing powerup catalog definition.",
+        "operationId": "update_backoffice_powerup_backoffice_powerups__powerup_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PowerupUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Backoffice Powerup",
+        "description": "Soft-delete a powerup definition.",
+        "operationId": "delete_backoffice_powerup_backoffice_powerups__powerup_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/powerups/{powerup_id}/upload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upload Powerup Icon",
+        "description": "Upload a binary icon asset for a specific powerup.",
+        "operationId": "upload_powerup_icon_backoffice_powerups__powerup_id__upload_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_powerup_icon_backoffice_powerups__powerup_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/users/{user_id}/inventory": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get User Inventory",
+        "description": "Inspect user's unlocked skins and current powerup balances.",
+        "operationId": "get_user_inventory_backoffice_users__user_id__inventory_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/users/{user_id}/powerups/grant": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Grant User Powerups",
+        "description": "Grant powerups to a player's inventory and audit in transaction logs.",
+        "operationId": "grant_user_powerups_backoffice_users__user_id__powerups_grant_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantPowerupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantPowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/users/{user_id}/skins/grant": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Grant User Skin",
+        "description": "Unlock a skin for a player and audit in transaction logs.",
+        "operationId": "grant_user_skin_backoffice_users__user_id__skins_grant_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantSkinRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantSkinResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/backoffice/store/offers": {
       "get": {
         "tags": [
@@ -1849,6 +2573,255 @@
         }
       }
     },
+    "/backoffice/achievements": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Achievements",
+        "description": "Retrieve all configured achievements.",
+        "operationId": "list_achievements_backoffice_achievements_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AchievementConfig"
+                  },
+                  "type": "array",
+                  "title": "Response List Achievements Backoffice Achievements Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Achievement",
+        "description": "Create a new achievement definition.",
+        "operationId": "create_achievement_backoffice_achievements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeAchievementCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/backoffice/achievements/{achievement_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Achievement",
+        "description": "Retrieve an achievement configuration by ID.",
+        "operationId": "get_achievement_backoffice_achievements__achievement_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Achievement",
+        "description": "Update an existing achievement definition.",
+        "operationId": "update_achievement_backoffice_achievements__achievement_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeAchievementUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Achievement",
+        "description": "Delete an achievement by ID.",
+        "operationId": "delete_achievement_backoffice_achievements__achievement_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/achievements/reload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Reload Achievements Catalog",
+        "description": "Force reload the achievements catalog from disk.",
+        "operationId": "reload_achievements_catalog_backoffice_achievements_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
     "/backoffice/analytics/levels": {
       "get": {
         "tags": [
@@ -2039,6 +3012,1861 @@
         "summary": "Get Hourly Activity",
         "description": "Retrieve player concurrency counts across a 24-hour cycle based on last login.",
         "operationId": "get_hourly_activity_backoffice_analytics_hourly_activity_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HourlyActivityResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/users": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Users",
+        "description": "Retrieve list of game accounts with query filtering and pagination.",
+        "operationId": "list_users_api_v1_backoffice_users_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Match email, UUID, or display name",
+              "title": "Search"
+            },
+            "description": "Match email, UUID, or display name"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create User",
+        "description": "Manually provision a new test account or administrator-override player profile.",
+        "operationId": "create_user_api_v1_backoffice_users_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}/status": {
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update User Status",
+        "description": "Deactivate (suspend) or reactivate a player's account.",
+        "operationId": "update_user_status_api_v1_backoffice_users__user_id__status_put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserStatusUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStatusUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}/progression": {
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update User Progression",
+        "description": "Directly adjust a user's wallet values (coins and gems) and log audit events.",
+        "operationId": "update_user_progression_api_v1_backoffice_users__user_id__progression_put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserProgressionUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProgressionUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}": {
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete User",
+        "description": "Permanently remove a user and delete all associated game inventory records.",
+        "operationId": "delete_user_api_v1_backoffice_users__user_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeleteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/store/catalog": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Store Skin",
+        "description": "Add a new skin or cosmetic item into the game's store catalog database.",
+        "operationId": "create_store_skin_api_v1_backoffice_store_catalog_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/store/catalog/{skin_id}": {
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Store Skin",
+        "description": "Modify skin specifications (pricing, image paths, name) or soft-delete it.",
+        "operationId": "update_store_skin_api_v1_backoffice_store_catalog__skin_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/store/catalog/{skin_id}/upload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upload Skin Image",
+        "description": "Upload a binary image asset for a specific skin item.",
+        "operationId": "upload_skin_image_api_v1_backoffice_store_catalog__skin_id__upload_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_skin_image_api_v1_backoffice_store_catalog__skin_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/skins": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Store Skins",
+        "description": "Retrieve all skins (active and inactive) for backoffice.",
+        "operationId": "list_store_skins_api_v1_backoffice_skins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkinSchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Store Skins Api V1 Backoffice Skins Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Skin Alias",
+        "description": "Alias for /store/catalog to create a skin.",
+        "operationId": "create_skin_alias_api_v1_backoffice_skins_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/skins/{skin_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Store Skin",
+        "description": "Retrieve details for a single skin.",
+        "operationId": "get_store_skin_api_v1_backoffice_skins__skin_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Skin Alias",
+        "description": "Alias for /store/catalog/{skin_id} to update a skin.",
+        "operationId": "update_skin_alias_api_v1_backoffice_skins__skin_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkinUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinUpdateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Store Skin",
+        "description": "Soft-delete a skin by setting is_active = False.",
+        "operationId": "delete_store_skin_api_v1_backoffice_skins__skin_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/skins/{skin_id}/upload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upload Skin Image Alias",
+        "description": "Upload skin asset image under /skins path.",
+        "operationId": "upload_skin_image_alias_api_v1_backoffice_skins__skin_id__upload_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_skin_image_alias_api_v1_backoffice_skins__skin_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/powerups": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Backoffice Powerups",
+        "description": "Retrieve all powerup definitions (active and inactive).",
+        "operationId": "list_backoffice_powerups_api_v1_backoffice_powerups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PowerupResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Backoffice Powerups Api V1 Backoffice Powerups Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Backoffice Powerup",
+        "description": "Create a new powerup catalog definition.",
+        "operationId": "create_backoffice_powerup_api_v1_backoffice_powerups_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PowerupCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/powerups/{powerup_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Backoffice Powerup",
+        "description": "Retrieve a single powerup definition by ID.",
+        "operationId": "get_backoffice_powerup_api_v1_backoffice_powerups__powerup_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Backoffice Powerup",
+        "description": "Update an existing powerup catalog definition.",
+        "operationId": "update_backoffice_powerup_api_v1_backoffice_powerups__powerup_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PowerupUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Backoffice Powerup",
+        "description": "Soft-delete a powerup definition.",
+        "operationId": "delete_backoffice_powerup_api_v1_backoffice_powerups__powerup_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/powerups/{powerup_id}/upload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upload Powerup Icon",
+        "description": "Upload a binary icon asset for a specific powerup.",
+        "operationId": "upload_powerup_icon_api_v1_backoffice_powerups__powerup_id__upload_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_powerup_icon_api_v1_backoffice_powerups__powerup_id__upload_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}/inventory": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get User Inventory",
+        "description": "Inspect user's unlocked skins and current powerup balances.",
+        "operationId": "get_user_inventory_api_v1_backoffice_users__user_id__inventory_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserInventoryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}/powerups/grant": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Grant User Powerups",
+        "description": "Grant powerups to a player's inventory and audit in transaction logs.",
+        "operationId": "grant_user_powerups_api_v1_backoffice_users__user_id__powerups_grant_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantPowerupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantPowerupResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/users/{user_id}/skins/grant": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Grant User Skin",
+        "description": "Unlock a skin for a player and audit in transaction logs.",
+        "operationId": "grant_user_skin_api_v1_backoffice_users__user_id__skins_grant_post",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantSkinRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GrantSkinResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/store/offers": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Shop Offers",
+        "description": "Retrieve all shop offers (active and inactive).",
+        "operationId": "list_shop_offers_api_v1_backoffice_store_offers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BackofficeOfferResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Shop Offers Api V1 Backoffice Store Offers Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Shop Offer",
+        "description": "Create a new shop offer with a list of nested skin items.",
+        "operationId": "create_shop_offer_api_v1_backoffice_store_offers_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeOfferCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackofficeOfferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/store/offers/{offer_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Shop Offer",
+        "description": "Retrieve a single shop offer detail.",
+        "operationId": "get_shop_offer_api_v1_backoffice_store_offers__offer_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackofficeOfferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Shop Offer",
+        "description": "Update a shop offer's fields and fully replace its nested skin items list.",
+        "operationId": "update_shop_offer_api_v1_backoffice_store_offers__offer_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeOfferUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackofficeOfferResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Shop Offer",
+        "description": "Delete a shop offer (which cascades to delete its DBOfferItem rows).",
+        "operationId": "delete_shop_offer_api_v1_backoffice_store_offers__offer_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "offer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Offer Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/achievements": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "List Achievements",
+        "description": "Retrieve all configured achievements.",
+        "operationId": "list_achievements_api_v1_backoffice_achievements_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AchievementConfig"
+                  },
+                  "type": "array",
+                  "title": "Response List Achievements Api V1 Backoffice Achievements Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Create Achievement",
+        "description": "Create a new achievement definition.",
+        "operationId": "create_achievement_api_v1_backoffice_achievements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeAchievementCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/achievements/{achievement_id}": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Achievement",
+        "description": "Retrieve an achievement configuration by ID.",
+        "operationId": "get_achievement_api_v1_backoffice_achievements__achievement_id__get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Update Achievement",
+        "description": "Update an existing achievement definition.",
+        "operationId": "update_achievement_api_v1_backoffice_achievements__achievement_id__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BackofficeAchievementUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementConfig"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete Achievement",
+        "description": "Delete an achievement by ID.",
+        "operationId": "delete_achievement_api_v1_backoffice_achievements__achievement_id__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "achievement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Achievement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/achievements/reload": {
+      "post": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Reload Achievements Catalog",
+        "description": "Force reload the achievements catalog from disk.",
+        "operationId": "reload_achievements_catalog_api_v1_backoffice_achievements_reload_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/analytics/levels": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Level Progression Stats",
+        "description": "Retrieve granular progression statistics per level.",
+        "operationId": "get_level_progression_stats_api_v1_backoffice_analytics_levels_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelStatsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/operations": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Operations Audit Logs",
+        "description": "Get logs of all critical administrative actions (filtered to ADJUSTMENT type for clarity or all logs).",
+        "operationId": "get_operations_audit_logs_api_v1_backoffice_operations_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/analytics/levels/distribution": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Level Distribution",
+        "description": "Retrieve player counts per level supporting binning and server-side aggregation.",
+        "operationId": "get_level_distribution_api_v1_backoffice_analytics_levels_distribution_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "aggregated | hotspots | range",
+              "title": "Mode"
+            },
+            "description": "aggregated | hotspots | range"
+          },
+          {
+            "name": "bin_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1000,
+              "title": "Bin Size"
+            }
+          },
+          {
+            "name": "range_start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Range Start"
+            }
+          },
+          {
+            "name": "range_end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 20,
+              "title": "Range End"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 15,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LevelDistResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/backoffice/analytics/retention": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Player Retention",
+        "description": "Retrieve classic cohort retention percentages (Day 1, Day 7, Day 30).",
+        "operationId": "get_player_retention_api_v1_backoffice_analytics_retention_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetentionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ]
+      }
+    },
+    "/api/v1/backoffice/analytics/hourly-activity": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get Hourly Activity",
+        "description": "Retrieve player concurrency counts across a 24-hour cycle based on last login.",
+        "operationId": "get_hourly_activity_api_v1_backoffice_analytics_hourly_activity_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2385,6 +5213,360 @@
         }
       }
     },
+    "/powerups": {
+      "get": {
+        "tags": [
+          "powerups"
+        ],
+        "summary": "List Powerups",
+        "description": "Fetch all active powerup definitions available in the game catalog.",
+        "operationId": "list_powerups_powerups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PowerupResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Powerups Powerups Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/powerups/{powerup_id}/icon": {
+      "get": {
+        "tags": [
+          "powerups"
+        ],
+        "summary": "Get Powerup Icon",
+        "description": "Serve raw binary image data for a specific powerup icon.",
+        "operationId": "get_powerup_icon_powerups__powerup_id__icon_get",
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/powerups": {
+      "get": {
+        "tags": [
+          "powerups"
+        ],
+        "summary": "List Powerups",
+        "description": "Fetch all active powerup definitions available in the game catalog.",
+        "operationId": "list_powerups_api_v1_powerups_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PowerupResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Powerups Api V1 Powerups Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/powerups/{powerup_id}/icon": {
+      "get": {
+        "tags": [
+          "powerups"
+        ],
+        "summary": "Get Powerup Icon",
+        "description": "Serve raw binary image data for a specific powerup icon.",
+        "operationId": "get_powerup_icon_api_v1_powerups__powerup_id__icon_get",
+        "parameters": [
+          {
+            "name": "powerup_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Powerup Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skins": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "List Public Skins",
+        "description": "Fetch all active skins available in the game catalog.",
+        "operationId": "list_public_skins_skins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkinSchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Public Skins Skins Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skins/{skin_id}": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "Get Public Skin",
+        "description": "Fetch single skin metadata by skin_id.",
+        "operationId": "get_public_skin_skins__skin_id__get",
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/skins/{skin_id}/image": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "Get Public Skin Image",
+        "description": "Retrieve skin's binary asset (image) from database with cache headers.",
+        "operationId": "get_public_skin_image_skins__skin_id__image_get",
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skins": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "List Public Skins",
+        "description": "Fetch all active skins available in the game catalog.",
+        "operationId": "list_public_skins_api_v1_skins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkinSchema"
+                  },
+                  "type": "array",
+                  "title": "Response List Public Skins Api V1 Skins Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skins/{skin_id}": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "Get Public Skin",
+        "description": "Fetch single skin metadata by skin_id.",
+        "operationId": "get_public_skin_api_v1_skins__skin_id__get",
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkinSchema"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/skins/{skin_id}/image": {
+      "get": {
+        "tags": [
+          "skins"
+        ],
+        "summary": "Get Public Skin Image",
+        "description": "Retrieve skin's binary asset (image) from database with cache headers.",
+        "operationId": "get_public_skin_image_api_v1_skins__skin_id__image_get",
+        "parameters": [
+          {
+            "name": "skin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Skin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -2506,6 +5688,47 @@
         ],
         "title": "AchievementClaimResponse"
       },
+      "AchievementConfig": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/AchievementTierConfig"
+            },
+            "type": "array",
+            "title": "Tiers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "icon",
+          "metric",
+          "tiers"
+        ],
+        "title": "AchievementConfig"
+      },
       "AchievementListResponse": {
         "properties": {
           "achievements": {
@@ -2572,6 +5795,57 @@
           "tiers"
         ],
         "title": "AchievementResponse"
+      },
+      "AchievementTierConfig": {
+        "properties": {
+          "tier": {
+            "type": "integer",
+            "title": "Tier"
+          },
+          "target": {
+            "type": "integer",
+            "title": "Target"
+          },
+          "reward_type": {
+            "type": "string",
+            "enum": [
+              "coins",
+              "gems",
+              "skin",
+              "powerup"
+            ],
+            "title": "Reward Type"
+          },
+          "reward_amount": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward Amount"
+          },
+          "reward_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reward Item Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tier",
+          "target",
+          "reward_type"
+        ],
+        "title": "AchievementTierConfig"
       },
       "AchievementTierResponse": {
         "properties": {
@@ -2757,13 +6031,13 @@
           },
           "price_coins": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Price Coins",
             "default": 0
           },
           "price_gems": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Price Gems",
             "default": 0
           },
@@ -2826,7 +6100,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -2838,7 +6112,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -2930,6 +6204,111 @@
         "title": "AppleAuthRequest",
         "description": "Apple authentication request."
       },
+      "BackofficeAchievementCreateRequest": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "icon": {
+            "type": "string",
+            "title": "Icon"
+          },
+          "metric": {
+            "type": "string",
+            "title": "Metric"
+          },
+          "tiers": {
+            "items": {
+              "$ref": "#/components/schemas/AchievementTierConfig"
+            },
+            "type": "array",
+            "title": "Tiers"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "icon",
+          "metric",
+          "tiers"
+        ],
+        "title": "BackofficeAchievementCreateRequest"
+      },
+      "BackofficeAchievementUpdateRequest": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon"
+          },
+          "metric": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Metric"
+          },
+          "tiers": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AchievementTierConfig"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tiers"
+          }
+        },
+        "type": "object",
+        "title": "BackofficeAchievementUpdateRequest"
+      },
       "BackofficeOfferCreateRequest": {
         "properties": {
           "offer_id": {
@@ -2958,13 +6337,13 @@
           },
           "price_coins": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Price Coins",
             "default": 0
           },
           "price_gems": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Price Gems",
             "default": 0
           },
@@ -3198,7 +6577,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -3210,7 +6589,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0
+                "minimum": 0.0
               },
               {
                 "type": "null"
@@ -3281,6 +6660,76 @@
         },
         "type": "object",
         "title": "BackofficeOfferUpdateRequest"
+      },
+      "Body_upload_powerup_icon_api_v1_backoffice_powerups__powerup_id__upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_powerup_icon_api_v1_backoffice_powerups__powerup_id__upload_post"
+      },
+      "Body_upload_powerup_icon_backoffice_powerups__powerup_id__upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_powerup_icon_backoffice_powerups__powerup_id__upload_post"
+      },
+      "Body_upload_skin_image_alias_api_v1_backoffice_skins__skin_id__upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_skin_image_alias_api_v1_backoffice_skins__skin_id__upload_post"
+      },
+      "Body_upload_skin_image_alias_backoffice_skins__skin_id__upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_skin_image_alias_backoffice_skins__skin_id__upload_post"
+      },
+      "Body_upload_skin_image_api_v1_backoffice_store_catalog__skin_id__upload_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_skin_image_api_v1_backoffice_store_catalog__skin_id__upload_post"
       },
       "Body_upload_skin_image_backoffice_store_catalog__skin_id__upload_post": {
         "properties": {
@@ -3405,6 +6854,105 @@
         ],
         "title": "GoogleAuthRequest",
         "description": "Google authentication request."
+      },
+      "GrantPowerupRequest": {
+        "properties": {
+          "powerup_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Powerup Id",
+            "description": "ID of the powerup to grant"
+          },
+          "amount": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Amount",
+            "description": "Positive amount to grant"
+          }
+        },
+        "type": "object",
+        "required": [
+          "powerup_id",
+          "amount"
+        ],
+        "title": "GrantPowerupRequest"
+      },
+      "GrantPowerupResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "powerup_id": {
+            "type": "string",
+            "title": "Powerup Id"
+          },
+          "amount_granted": {
+            "type": "integer",
+            "title": "Amount Granted"
+          },
+          "new_quantity": {
+            "type": "integer",
+            "title": "New Quantity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "user_id",
+          "powerup_id",
+          "amount_granted",
+          "new_quantity"
+        ],
+        "title": "GrantPowerupResponse"
+      },
+      "GrantSkinRequest": {
+        "properties": {
+          "skin_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Skin Id",
+            "description": "ID of the skin to grant"
+          }
+        },
+        "type": "object",
+        "required": [
+          "skin_id"
+        ],
+        "title": "GrantSkinRequest"
+      },
+      "GrantSkinResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "skin_id": {
+            "type": "string",
+            "title": "Skin Id"
+          },
+          "unlocked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Unlocked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "user_id",
+          "skin_id",
+          "unlocked_at"
+        ],
+        "title": "GrantSkinResponse"
       },
       "GuestAuthRequest": {
         "properties": {
@@ -3822,8 +7370,8 @@
           },
           "stars": {
             "type": "integer",
-            "maximum": 3,
-            "minimum": 0,
+            "maximum": 3.0,
+            "minimum": 0.0,
             "title": "Stars",
             "description": "Stars earned (0-3)"
           },
@@ -3932,6 +7480,249 @@
           "daily_downloads"
         ],
         "title": "PlayStoreStatsResponse"
+      },
+      "PowerupCreateRequest": {
+        "properties": {
+          "powerup_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Powerup Id",
+            "description": "Unique identifier for the powerup"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Name",
+            "description": "Display name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "price_coins": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Price Coins",
+            "default": 0
+          },
+          "price_gems": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Price Gems",
+            "default": 0
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "icon_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "powerup_id",
+          "name"
+        ],
+        "title": "PowerupCreateRequest"
+      },
+      "PowerupResponse": {
+        "properties": {
+          "powerup_id": {
+            "type": "string",
+            "title": "Powerup Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "price_coins": {
+            "type": "integer",
+            "title": "Price Coins",
+            "default": 0
+          },
+          "price_gems": {
+            "type": "integer",
+            "title": "Price Gems",
+            "default": 0
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "icon_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Path"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "default": true
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "powerup_id",
+          "name"
+        ],
+        "title": "PowerupResponse"
+      },
+      "PowerupUpdateRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "price_coins": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Coins"
+          },
+          "price_gems": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Gems"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "icon_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Icon Path"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "PowerupUpdateRequest"
       },
       "ProgressionSyncRequest": {
         "properties": {
@@ -4770,16 +8561,25 @@
           },
           "auth_provider": {
             "type": "string",
-            "title": "Auth Provider"
+            "title": "Auth Provider",
+            "default": "guest"
           },
           "created_at": {
-            "type": "string",
-            "format": "date-time",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Created At"
           },
           "is_active": {
             "type": "boolean",
-            "title": "Is Active"
+            "title": "Is Active",
+            "default": true
           },
           "progression": {
             "$ref": "#/components/schemas/UserProgressionInfo"
@@ -4788,11 +8588,6 @@
         "type": "object",
         "required": [
           "user_id",
-          "email",
-          "display_name",
-          "auth_provider",
-          "created_at",
-          "is_active",
           "progression"
         ],
         "title": "UserBackofficeResponse"
@@ -4891,6 +8686,35 @@
         ],
         "title": "UserDeleteResponse"
       },
+      "UserInventoryResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "skins": {
+            "items": {
+              "$ref": "#/components/schemas/SkinSchema"
+            },
+            "type": "array",
+            "title": "Skins"
+          },
+          "powerups": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Powerups"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "skins",
+          "powerups"
+        ],
+        "title": "UserInventoryResponse"
+      },
       "UserListResponse": {
         "properties": {
           "users": {
@@ -4925,14 +8749,14 @@
           },
           "coins": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Coins",
             "description": "Total coins earned",
             "default": 0
           },
           "gems": {
             "type": "integer",
-            "minimum": 0,
+            "minimum": 0.0,
             "title": "Gems",
             "description": "Total gems earned",
             "default": 0
@@ -4967,7 +8791,7 @@
           },
           "next_level": {
             "type": "integer",
-            "minimum": 1,
+            "minimum": 1.0,
             "title": "Next Level",
             "description": "Next level to play (length of passed_levels + 1)",
             "default": 1
@@ -4985,7 +8809,7 @@
           "total_playtime": {
             "type": "number",
             "title": "Total Playtime",
-            "default": 0
+            "default": 0.0
           },
           "total_powerups_used": {
             "type": "integer",
@@ -5026,7 +8850,7 @@
           "user_id"
         ],
         "title": "UserProgression",
-        "description": "User game progression for BlockMerge.",
+        "description": "User game progression for PurringBlocks.",
         "example": {
           "coins": 1500,
           "passed_levels": [
@@ -5040,7 +8864,7 @@
           ],
           "total_blocks_merged": 500,
           "total_games_played": 10,
-          "total_playtime": 1800,
+          "total_playtime": 1800.0,
           "user_id": "user_123456"
         }
       },
@@ -5048,18 +8872,16 @@
         "properties": {
           "coins": {
             "type": "integer",
-            "title": "Coins"
+            "title": "Coins",
+            "default": 0
           },
           "gems": {
             "type": "integer",
-            "title": "Gems"
+            "title": "Gems",
+            "default": 0
           }
         },
         "type": "object",
-        "required": [
-          "coins",
-          "gems"
-        ],
         "title": "UserProgressionInfo"
       },
       "UserProgressionUpdateRequest": {
