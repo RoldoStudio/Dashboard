@@ -21,7 +21,7 @@ export default function App() {
     }
   }, []);
 
-  const addToast = (message, type = 'info') => {
+  const addToast = React.useCallback((message, type = 'info') => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev, { id, message, type }]);
     
@@ -29,7 +29,7 @@ export default function App() {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 4000);
-  };
+  }, []);
 
   const removeToast = (id) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));

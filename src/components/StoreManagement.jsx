@@ -51,6 +51,7 @@ export default function StoreManagement({ addToast }) {
   const [isPowerupEditModalOpen, setIsPowerupEditModalOpen] = useState(false);
   const [selectedPowerup, setSelectedPowerup] = useState(null);
   const [uploadingPowerupId, setUploadingPowerupId] = useState(null);
+  const [powerupIconErrors, setPowerupIconErrors] = useState({});
 
   // Powerup form fields
   const [powerupFormId, setPowerupFormId] = useState('');
@@ -152,10 +153,10 @@ export default function StoreManagement({ addToast }) {
       fetchOffers();
       fetchSkins();
       fetchPowerups();
-    } else {
+    } else if (activeSubTab === 'transactions') {
       fetchTransactions();
     }
-  }, [activeSubTab, fetchSkins, fetchPowerups, fetchOffers, fetchTransactions]);
+  }, [activeSubTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeSubTab === 'transactions') {
@@ -868,18 +869,18 @@ export default function StoreManagement({ addToast }) {
                                 overflow: 'hidden'
                               }}
                             >
-                              <img
-                                src={api.getPowerupIconUrl(p.powerup_id)}
-                                alt={p.name}
-                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                                onError={(e) => {
-                                  e.target.style.display = 'none';
-                                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                                }}
-                              />
-                              <div style={{ display: 'none', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                              {p.icon_path && !powerupIconErrors[p.powerup_id] ? (
+                                <img
+                                  src={api.getPowerupIconUrl(p.powerup_id)}
+                                  alt={p.name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  onError={() => {
+                                    setPowerupIconErrors(prev => ({ ...prev, [p.powerup_id]: true }));
+                                  }}
+                                />
+                              ) : (
                                 <Zap size={18} style={{ color: 'var(--primary)' }} />
-                              </div>
+                              )}
                             </div>
                           </td>
                           <td>

@@ -46,6 +46,8 @@ async function request(endpoint, options = {}) {
     let errorMessage = 'API request failed';
     if (typeof errorData.detail === 'string') {
       errorMessage = errorData.detail;
+    } else if (typeof errorData.error === 'string') {
+      errorMessage = errorData.error;
     } else if (Array.isArray(errorData.detail) && errorData.detail.length > 0) {
       errorMessage = errorData.detail.map(d => d.msg || JSON.stringify(d)).join(', ');
     }
