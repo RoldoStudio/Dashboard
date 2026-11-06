@@ -86,6 +86,22 @@ export default function AdMobStats({ addToast }) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val || 0);
   };
 
+  // Helper to format date label
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const parts = dateStr.split('-');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const monthIndex = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (monthIndex >= 0 && monthIndex < 12) {
+        return `${months[monthIndex]} ${day}`;
+      }
+      return `${parts[1]}/${parts[2]}`;
+    }
+    return dateStr;
+  };
+
   // SVGs Chart setup
   const chartWidth = 500;
   const chartHeight = 180;
@@ -277,7 +293,7 @@ export default function AdMobStats({ addToast }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: `0 ${padding}px`, marginTop: '8px' }}>
             {points.map(p => (
               <span key={p.date} style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                {p.date ? p.date.substring(5) : ''}
+                {formatDate(p.date)}
               </span>
             ))}
           </div>
