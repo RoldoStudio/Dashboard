@@ -1416,6 +1416,184 @@
         }
       }
     },
+    "/backoffice/users/{user_id}/levels": {
+      "get": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Get User Levels",
+        "description": "List a user's completed levels and the resulting next_level.",
+        "operationId": "get_user_levels_backoffice_users__user_id__levels_get",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLevelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/backoffice/users/{user_id}/levels/{level_number}": {
+      "put": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Upsert User Level",
+        "description": "Mark a level as completed for a user, or edit its stars and high score.",
+        "operationId": "upsert_user_level_backoffice_users__user_id__levels__level_number__put",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "level_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "title": "Level Number"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/UserLevelUpsertRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Request"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLevelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Backoffice"
+        ],
+        "summary": "Delete User Level",
+        "description": "Remove a completed level from a user and return the refreshed levels payload.",
+        "operationId": "delete_user_level_backoffice_users__user_id__levels__level_number__delete",
+        "security": [
+          {
+            "HTTPBasic": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "User Id"
+            }
+          },
+          {
+            "name": "level_number",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Level Number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLevelsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/backoffice/users/{user_id}": {
       "delete": {
         "tags": [
@@ -9240,6 +9418,53 @@
           "segments"
         ],
         "title": "WheelStatusResponse"
+      },
+      "UserLevelsResponse": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "title": "User Id"
+          },
+          "passed_levels": {
+            "items": {
+              "$ref": "#/components/schemas/PassedLevel"
+            },
+            "type": "array",
+            "title": "Passed Levels"
+          },
+          "next_level": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Next Level"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "next_level"
+        ],
+        "title": "UserLevelsResponse"
+      },
+      "UserLevelUpsertRequest": {
+        "properties": {
+          "stars": {
+            "type": "integer",
+            "maximum": 3.0,
+            "minimum": 0.0,
+            "title": "Stars",
+            "description": "Stars earned (0-3)",
+            "default": 3
+          },
+          "high_score": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "High Score",
+            "description": "High score for the level",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "UserLevelUpsertRequest"
       }
     },
     "securitySchemes": {

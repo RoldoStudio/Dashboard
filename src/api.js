@@ -189,6 +189,24 @@ export const api = {
     });
   },
 
+  // Backoffice User Level Completion
+  async getUserLevels(userId) {
+    return request(`/backoffice/users/${userId}/levels`);
+  },
+
+  async setUserLevel(userId, levelNumber, { stars = 3, highScore = 0 } = {}) {
+    return request(`/backoffice/users/${userId}/levels/${levelNumber}`, {
+      method: 'PUT',
+      body: JSON.stringify({ stars, high_score: highScore })
+    });
+  },
+
+  async removeUserLevel(userId, levelNumber) {
+    return request(`/backoffice/users/${userId}/levels/${levelNumber}`, {
+      method: 'DELETE'
+    });
+  },
+
   // Store Catalog management (Admin)
   async getStoreCatalog() {
     return request('/store/catalog/admin');

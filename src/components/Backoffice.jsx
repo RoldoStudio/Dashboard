@@ -17,7 +17,8 @@ import {
   Package,
   Gift,
   Zap,
-  Tag
+  Tag,
+  Star
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -50,6 +51,17 @@ export default function Backoffice({ addToast }) {
   const [grantPowerupAmount, setGrantPowerupAmount] = useState(1);
   const [grantingSkin, setGrantingSkin] = useState(false);
   const [grantingPowerup, setGrantingPowerup] = useState(false);
+
+  // Level Completion Modal state
+  const [isLevelsModalOpen, setIsLevelsModalOpen] = useState(false);
+  const [levelsUser, setLevelsUser] = useState(null);
+  const [userLevels, setUserLevels] = useState([]);
+  const [nextLevel, setNextLevel] = useState(1);
+  const [loadingLevels, setLoadingLevels] = useState(false);
+  const [savingLevel, setSavingLevel] = useState(false);
+  const [levelNumberInput, setLevelNumberInput] = useState(1);
+  const [levelStarsInput, setLevelStarsInput] = useState(3);
+  const [levelHighScoreInput, setLevelHighScoreInput] = useState(0);
 
   // Edit form state
   const [editCoins, setEditCoins] = useState(0);
@@ -232,6 +244,66 @@ export default function Backoffice({ addToast }) {
     }
   };
 
+  const applyLevelsPayload = (data) => {
+    setUserLevels(data?.passed_levels || []);
+    setNextLevel(data?.next_level || 1);
+  };
+
+  const handleOpenLevels = async (user) => {
+    setLevelsUser(user);
+    setUserLevels([]);
+    setLevelNumberInput(1);
+    setLevelStarsInput(3);
+    setLevelHighScoreInput(0);
+    setIsLevelsModalOpen(true);
+    setLoadingLevels(true);
+    try {
+      applyLevelsPayload(await api.getUserLevels(user.user_id));
+    } catch (err) {
+      addToast(err.message || 'Failed to load user levels', 'error');
+    } finally {
+      setLoadingLevels(false);
+    }
+  };
+
+  const handleEditLevel = (level) => {
+    setLevelNumberInput(level.level_number);
+    setLevelStarsInput(level.stars);
+    setLevelHighScoreInput(level.high_score || 0);
+  };
+
+  const handleSaveLevel = async (e) => {
+    e.preventDefault();
+    if (!levelsUser) return;
+    setSavingLevel(true);
+    try {
+      const data = await api.setUserLevel(levelsUser.user_id, levelNumberInput, {
+        stars: levelStarsInput,
+        highScore: levelHighScoreInput
+      });
+      applyLevelsPayload(data);
+      addToast(`Level ${levelNumberInput} saved for ${levelsUser.display_name || levelsUser.user_id}.`, 'success');
+      fetchOperations();
+    } catch (err) {
+      addToast(err.message || 'Failed to save level', 'error');
+    } finally {
+      setSavingLevel(false);
+    }
+  };
+
+  const handleRemoveLevel = async (levelNumber) => {
+    if (!levelsUser) return;
+    if (!window.confirm(`Remove completion of level ${levelNumber}? The user will have to replay it.`)) return;
+    try {
+      const data = await api.removeUserLevel(levelsUser.user_id, levelNumber);
+      applyLevelsPayload(data);
+      addToast(`Level ${levelNumber} removed.`, 'success');
+      fetchOperations();
+    } catch (err) {
+      addToast(err.message || 'Failed to remove level', 'error');
+    }
+  };
+
   return (
     <div>
       {/* Search & Actions Bar */}
@@ -384,6 +456,15 @@ export default function Backoffice({ addToast }) {
                             title="Inspect Inventory & Grant Items"
                           >
                             <Package size={14} style={{ color: 'var(--accent)' }} />
+                          </button>
+
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: '6px 8px', borderRadius: '6px' }}
+                            onClick={() => handleOpenLevels(u)}
+                            title="Manage Completed Levels"
+                          >
+                            <Star size={14} style={{ color: '#f59e0b' }} />
                           </button>
 
                           <button 
@@ -863,6 +944,163 @@ export default function Backoffice({ addToast }) {
 
             <div className="modal-footer" style={{ marginTop: '20px' }}>
               <button type="button" className="btn btn-secondary" onClick={() => setIsInventoryModalOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Level Completion Modal */}
+      {isLevelsModalOpen && levelsUser && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: '620px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Star size={20} style={{ color: '#f59e0b' }} />
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px' }}>Level Completion</h3>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                    {levelsUser.display_name || 'User'} ({levelsUser.user_id}) · next level: {nextLevel}
+                  </div>
+                </div>
+              </div>
+              <button className="modal-close" onClick={() => setIsLevelsModalOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+
+            {loadingLevels ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                <RotateCw size={24} className="animate-spin" style={{ margin: '0 auto 12px auto' }} />
+                <div>Loading completed levels...</div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Completed levels list */}
+                <div style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '16px', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '14px', margin: '0 0 12px 0' }}>Completed Levels ({userLevels.length})</h4>
+
+                  {userLevels.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {[...userLevels]
+                        .sort((a, b) => a.level_number - b.level_number)
+                        .map((level) => (
+                          <div
+                            key={level.level_number}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              border: '1px solid var(--border-color)',
+                              fontSize: '13px'
+                            }}
+                          >
+                            <strong style={{ minWidth: '70px' }}>Level {level.level_number}</strong>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              {[1, 2, 3].map((s) => (
+                                <Star
+                                  key={s}
+                                  size={12}
+                                  style={{ color: s <= level.stars ? '#f59e0b' : 'var(--text-muted)' }}
+                                />
+                              ))}
+                            </span>
+                            <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
+                              Score: {(level.high_score || 0).toLocaleString()}
+                            </span>
+                            <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ padding: '4px 8px', fontSize: '11px', width: 'auto' }}
+                                onClick={() => handleEditLevel(level)}
+                                title="Load this level into the form to edit it"
+                              >
+                                <Edit2 size={11} />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ padding: '4px 8px', fontSize: '11px', width: 'auto' }}
+                                onClick={() => handleRemoveLevel(level.level_number)}
+                                title="Remove completion"
+                              >
+                                <Trash2 size={11} style={{ color: 'var(--danger)' }} />
+                                <span>Remove</span>
+                              </button>
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>
+                      This user has not completed any levels.
+                    </div>
+                  )}
+                </div>
+
+                {/* Mark level as completed / edit */}
+                <form
+                  onSubmit={handleSaveLevel}
+                  style={{ border: '1px solid var(--border-color)', borderRadius: '10px', padding: '16px', background: 'var(--bg-card)' }}
+                >
+                  <h4 style={{ fontSize: '14px', margin: '0 0 12px 0' }}>Mark Level Completed</h4>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                    <div className="form-group" style={{ flex: 1, minWidth: '90px', marginBottom: 0 }}>
+                      <label className="form-label" htmlFor="levelNumber">Level</label>
+                      <input
+                        id="levelNumber"
+                        className="form-input"
+                        type="number"
+                        min="1"
+                        value={levelNumberInput}
+                        onChange={(e) => setLevelNumberInput(parseInt(e.target.value) || 1)}
+                        required
+                      />
+                    </div>
+                    <div className="form-group" style={{ flex: 1, minWidth: '90px', marginBottom: 0 }}>
+                      <label className="form-label" htmlFor="levelStars">Stars (0–3)</label>
+                      <select
+                        id="levelStars"
+                        className="form-input"
+                        value={levelStarsInput}
+                        onChange={(e) => setLevelStarsInput(parseInt(e.target.value))}
+                      >
+                        {[0, 1, 2, 3].map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1, minWidth: '120px', marginBottom: 0 }}>
+                      <label className="form-label" htmlFor="levelHighScore">High Score</label>
+                      <input
+                        id="levelHighScore"
+                        className="form-input"
+                        type="number"
+                        min="0"
+                        value={levelHighScoreInput}
+                        onChange={(e) => setLevelHighScoreInput(Math.max(0, parseInt(e.target.value) || 0))}
+                        required
+                      />
+                    </div>
+                    <button type="submit" className="btn btn-primary" disabled={savingLevel} style={{ width: 'auto' }}>
+                      <Star size={14} />
+                      <span>{savingLevel ? 'Saving...' : 'Save Level'}</span>
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '10px' }}>
+                    If the level already exists, its stars and score are updated.
+                  </div>
+                </form>
+              </div>
+            )}
+
+            <div className="modal-footer" style={{ marginTop: '20px' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => setIsLevelsModalOpen(false)}>
                 Close
               </button>
             </div>
